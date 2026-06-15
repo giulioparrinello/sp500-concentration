@@ -1,0 +1,206 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{abstract}
+
+\geometry{margin=2.5cm}
+\onehalfspacing
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
+
+% --- Metadata ---
+\title{Magnificent Seven and Market Efficiency:\\
+Decomposing S\&P500 Returns Through\\
+Concentration Analysis (2019--2024)}
+
+\author{
+  Giulio Parrinello\\
+  \small Universit\`a degli Studi di Palermo\\
+  \small Ingegneria Gestionale\\
+  \small \texttt{giulioparrinello@mail.com}
+}
+
+\date{\today}
+
+% --- Document ---
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper investigates the degree to which the S\&P500 index's six-year performance (2019--2024) is attributable to a concentrated subset of mega-cap technology firms, commonly referred to as the ``Magnificent Seven'' (Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta, and Tesla). Using publicly available daily price data, \emph{historical} shares-outstanding to reconstruct time-varying market-capitalization weights, and the equal-weight S\&P500 ETF (RSP) as a concentration-neutral benchmark, we decompose index returns and quantify the concentration effect. We find that the capitalization-weighted index (SPY, $+158\%$) outperformed its equal-weight counterpart (RSP, $+113\%$) by roughly $46$ percentage points, that the Magnificent Seven grew from about $16\%$ to $58\%$ of the fifty largest constituents' market capitalization, and that a counterfactual index excluding these seven firms would have returned $+108\%$ instead of $+167\%$, implying the group accounts for roughly $35\%$ of cumulative index returns. These results raise questions about the diversification assumptions embedded in passive investing and about the empirical content of the semi-strong form of the Efficient Market Hypothesis in an era of capital concentration.
+\end{abstract}
+
+\section{Introduction}
+
+The S\&P500 index is widely regarded as a diversified proxy for the U.S.\ equity market. By construction, however, it is \emph{capitalization-weighted}: each firm enters the index in proportion to its market value, so the largest companies exert disproportionate influence on the index's behaviour. In recent years this mechanism has produced an unprecedented concentration of index weight in a small number of technology-driven mega-cap firms --- Apple, Microsoft, NVIDIA, Alphabet, Amazon, Meta, and Tesla --- collectively known as the ``Magnificent Seven.''
+
+This paper asks a simple but empirically important question: \emph{how much of the S\&P500's cumulative performance over 2019--2024 is attributable to these seven firms, and what does this imply for market efficiency?} We answer it in three complementary ways. First, we compare the standard capitalization-weighted index (proxied by SPY) against the equal-weight version of the same index (proxied by the RSP ETF); the gap between the two is the cleanest market-based measure of how much concentration mattered. Second, we reconstruct \emph{time-varying} market-capitalization weights from historical shares-outstanding data and build a counterfactual index that excludes the Magnificent Seven. Third, we decompose annual return contributions firm by firm. Throughout, we relate the findings to the Efficient Market Hypothesis \citep{fama1970, fama1991}.
+
+\section{Literature Review}
+
+\subsection{The Efficient Market Hypothesis}
+
+\citet{fama1970} introduced the canonical three-form taxonomy of market efficiency. The semi-strong form posits that prices fully reflect all publicly available information, implying that no investor can consistently achieve abnormal returns through fundamental analysis. \citet{fama1991} later refined the framework, acknowledging the joint-hypothesis problem that besets all empirical tests of efficiency: any test of efficiency is simultaneously a test of the asset-pricing model assumed.
+
+\subsection{Behavioural Finance Critiques}
+
+\citet{shiller1981} demonstrated that stock prices exhibit ``excess volatility'' relative to subsequent dividend changes, challenging the rational-expectations underpinning of the EMH. \citet{debondt1985} documented systematic overreaction, with prior losers outperforming prior winners over three-to-five-year horizons. These findings suggest that markets may not incorporate information efficiently at all horizons, particularly during episodes of speculative enthusiasm.
+
+\subsection{Mega-Cap Concentration in Modern Indices}
+
+Recent research and market commentary \citep{sp500mag7_2024} has highlighted the growing concentration of the S\&P500 around a handful of technology firms. The phenomenon is historically unusual: the combined weight of the top constituents in 2024 reached levels not seen since the 1970s, when AT\&T and IBM dominated the index. The implications for passive investors --- who by construction hold the index as given --- are significant, since the diversification they believe they own is increasingly notional. The classical case for diversification dates to \citet{markowitz1952}.
+
+\section{Data and Methodology}
+
+\subsection{Data Sources}
+
+Daily closing prices are sourced from Yahoo Finance via the \texttt{yfinance} Python library. We use the SPY ETF as a proxy for the capitalization-weighted S\&P500 and the Invesco RSP ETF as a proxy for the equal-weight S\&P500. The analysis period spans January 2, 2019 to December 31, 2024 ($1{,}509$ trading days).
+
+A key methodological improvement over static analyses is our treatment of weights. Rather than applying \emph{current} index weights retroactively --- which would introduce look-ahead bias in favour of firms that are large \emph{today} --- we reconstruct \emph{historical} market capitalizations as the product of each firm's unadjusted closing price and its shares outstanding at each date, the latter obtained from Yahoo Finance's historical shares series. This yields time-varying weights that reflect each firm's actual size at each point in time.
+
+\subsection{Index Reconstruction}
+
+We define the working universe as the fifty largest S\&P500 constituents by average market capitalization over the period, which together account for the large majority of index value and reproduce the full index closely (the reconstructed capitalization-weighted return correlates at $\rho = 0.98$ with SPY, validating the approach). To construct the counterfactual ``without Magnificent Seven'' index, we remove the seven excluded tickers and renormalize the remaining weights daily. Formally, for remaining constituents $i \in I \setminus E$ where $E$ is the excluded set:
+\begin{equation}
+  w_{i,t}^{*} = \frac{m_{i,t}}{\sum_{j \in I \setminus E} m_{j,t}}, \qquad
+  m_{i,t} = p_{i,t}\, s_{i,t},
+\end{equation}
+where $p_{i,t}$ is the unadjusted price and $s_{i,t}$ the shares outstanding. The counterfactual daily return is
+\begin{equation}
+  r_t^{\text{ex}} = \sum_{i \in I \setminus E} w_{i,t-1}^{*} \cdot r_{i,t}.
+\end{equation}
+
+\subsection{Risk-Adjusted Performance}
+
+Risk-adjusted comparison uses the Sharpe ratio. Rather than fixing the risk-free rate, we use the \emph{realized} 13-week U.S.\ Treasury bill yield (\texttt{\^{}IRX}), which varied from near zero in 2020--2021 to above $5\%$ in 2023--2024. The annualized Sharpe ratio is computed both over the full period and on a rolling 12-month (252-day) window:
+\begin{equation}
+  \mathrm{Sharpe} = \frac{\overline{r_t - r^{f}_t}}{\sigma(r_t - r^{f}_t)} \, \sqrt{252}.
+\end{equation}
+
+\subsection{Limitations}
+
+\begin{itemize}
+  \item The working universe is the top 50 constituents; the smallest S\&P500 members are excluded, though their aggregate weight is small.
+  \item SPY and RSP are used as proxies for the index and its equal-weight version; minor tracking error and expense-ratio drag exist.
+  \item Shares-outstanding data are reported at irregular intervals and forward-filled between updates.
+  \item The membership of the ``Magnificent Seven'' is itself chosen with hindsight; the group is defined ex post as the firms that came to dominate the index.
+  \item The period includes exceptional macro events (the Covid crash, the post-Covid bull run, and the 2022 rate shock) that amplify the measured concentration effect.
+\end{itemize}
+
+\section{Results}
+
+\subsection{Performance Comparison}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/performance_chart.png}
+  \caption{Cumulative performance (base $=100$): the capitalization-weighted S\&P500 (SPY), its equal-weight version (RSP), and the reconstructed top-50 index excluding the Magnificent Seven, 2019--2024.}
+  \label{fig:performance}
+\end{figure}
+
+Figure~\ref{fig:performance} shows the central result. The capitalization-weighted index returned $+158\%$ over the period, while the equal-weight version returned only $+113\%$ --- a gap of roughly $46$ percentage points attributable almost entirely to the outsized contribution of the largest firms. The counterfactual top-50 index excluding the Magnificent Seven trails further, at $+108\%$. The three curves are nearly indistinguishable until 2020 and then fan out progressively, with the divergence accelerating sharply through 2023--2024.
+
+\subsection{Return Attribution}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/attribution_chart.png}
+  \caption{Annual return contribution by Magnificent Seven constituent (percentage points of index return), using time-varying historical weights.}
+  \label{fig:attribution}
+\end{figure}
+
+The firm-level decomposition (Figure~\ref{fig:attribution}) shows that the contribution is not evenly spread. Over 2023--2024 alone, NVIDIA added about $12.5$ percentage points to index return, Apple $10.4$, Meta $9.8$, Microsoft $8.4$, Amazon $8.3$, Alphabet $7.2$, and Tesla $5.4$. NVIDIA's emergence as the single largest contributor in 2023--2024, on the back of the artificial-intelligence investment cycle, is the most striking feature of the period.
+
+\begin{table}[H]
+  \centering
+  \caption{Key metrics summary, 2019--2024. Sharpe ratios use the realized 13-week T-bill rate.}
+  \begin{tabular}{lrrrr}
+    \toprule
+    & SPY (cap-wt) & RSP (equal-wt) & Without Mag7 & Mag7 only \\
+    \midrule
+    Cumulative return     & $158.4\%$ & $112.5\%$ & $108.5\%$ & $364.7\%$ \\
+    Annualized return     & $17.2\%$  & $13.4\%$  & $13.1\%$  & $29.2\%$ \\
+    Annualized volatility & $19.8\%$  & $20.9\%$  & $18.2\%$  & $28.6\%$ \\
+    Sharpe ratio          & $0.78$    & $0.59$    & $0.63$    & $0.96$ \\
+    Max drawdown          & $-33.7\%$ & $-39.0\%$ & $-32.1\%$ & $-43.3\%$ \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:metrics}
+\end{table}
+
+Table~\ref{tab:metrics} reveals a subtler point. The Magnificent Seven did not merely raise returns; on a stand-alone basis they earned a Sharpe ratio of $0.96$, well above both the cap-weighted ($0.78$) and equal-weight ($0.59$) indices, despite far higher volatility ($28.6\%$) and a deeper drawdown ($-43.3\%$). The cap-weighted index's superior Sharpe over the equal-weight version is therefore inherited directly from its concentration in these names.
+
+\subsection{Concentration Over Time}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/concentration_chart.png}
+  \caption{Concentration: combined market-capitalization share of the Magnificent Seven (and of the top five firms) within the fifty-largest-constituent universe, 2019--2024.}
+  \label{fig:concentration}
+\end{figure}
+
+Figure~\ref{fig:concentration} quantifies the concentration trend directly. The Magnificent Seven's combined share of the top-50 market capitalization rose from about $16\%$ at the start of 2019 to roughly $58\%$ by the end of 2024 --- more than a threefold increase. By the close of the period the five largest firms alone represented nearly $49\%$ of the top-50 universe. This is the structural fact underlying every other result in the paper.
+
+\subsection{Correlation Structure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/heatmap_chart.png}
+  \caption{Pearson correlation matrix of daily returns --- Magnificent Seven and the S\&P500 (SPY), 2019--2024.}
+  \label{fig:heatmap}
+\end{figure}
+
+The correlation structure (Figure~\ref{fig:heatmap}) bears on the diversification question. The Magnificent Seven exhibit an average daily-return correlation with the index of about $0.68$; pairwise correlations among them range down to roughly $0.32$ (Tesla being the most idiosyncratic). High individual correlations with the benchmark are mechanically reinforced as these firms come to dominate the index they are correlated with --- an investor holding the index increasingly holds a concentrated, mutually correlated technology bet rather than a diversified portfolio.
+
+\subsection{Risk-Adjusted Performance}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figures/sharpe_chart.png}
+  \caption{Twelve-month rolling Sharpe ratio: cap-weighted (SPY) versus equal-weight (RSP), using the realized risk-free rate.}
+  \label{fig:sharpe}
+\end{figure}
+
+The rolling Sharpe ratio (Figure~\ref{fig:sharpe}) shows that the cap-weighted index's risk-adjusted edge over the equal-weight version is not constant: the two move together for much of the sample, with SPY pulling decisively ahead during the 2023--2024 AI-driven rally. There are intervals --- notably the 2022 rate shock --- where the equal-weight index held up comparably or better, a reminder that concentration cuts both ways.
+
+\subsection{Statistical Significance}
+
+The $46$-percentage-point cumulative gap between the cap-weighted and equal-weight indices is economically large, but is it statistically distinguishable from noise? We test the null hypothesis that the mean daily return difference $d_t = r_t^{\text{SPY}} - r_t^{\text{RSP}}$ is zero, using a paired $t$-test over the $1{,}509$ daily observations. The mean difference corresponds to about $+3.0$ percentage points of annualized excess return in favour of the cap-weighted index, but with $t = 1.08$ and $p = 0.28$ we \emph{cannot} reject the null at conventional levels.
+
+This apparent paradox is instructive. A daily edge that is small relative to daily volatility --- and therefore statistically insignificant at high frequency --- can compound into a very large cumulative divergence over six years. The headline outperformance is real and economically meaningful, yet it does not constitute statistical evidence of a persistent, exploitable return premium; it is consistent with concentration amplifying an essentially noisy daily signal. (We note that daily returns are mildly autocorrelated, so the $t$-test slightly overstates the effective sample size; the conclusion of non-significance is, if anything, conservative.)
+
+\section{Discussion}
+
+\subsection{Implications for the EMH}
+
+The findings admit two readings. Under a strict efficient-markets interpretation, the Magnificent Seven's dominance is not an anomaly at all: their prices simply reflect exceptional and correctly anticipated fundamentals (cloud computing, advertising scale, and the AI capital cycle). The fact that a known, named set of stocks drove most of the index's return is not, by itself, evidence of inefficiency --- the semi-strong form predicts only that one cannot earn \emph{abnormal} returns from \emph{public} information, and concentration was public knowledge throughout. The behavioural reading, following \citet{shiller1981} and \citet{debondt1985}, would instead point to the speed and magnitude of the 2023--2024 re-rating as consistent with overreaction and narrative-driven momentum. Our data cannot adjudicate between these; the joint-hypothesis problem \citep{fama1991} means any verdict depends on the assumed pricing model.
+
+\subsection{Concentration Risk for Passive Investors}
+
+A self-reinforcing mechanism deserves emphasis. Passive, capitalization-weighted investing mechanically buys more of a stock as it rises: as the mega-caps grow, index funds allocate ever-larger shares to them, which sustains demand and further inflates their weight. Diversification, the principal selling point of index investing \citep{markowitz1952}, is thereby quietly eroded from within. The $46$-percentage-point gap between SPY and RSP is the price of that erosion when concentration pays off; the deeper drawdown of the Mag7 basket ($-43\%$) is its cost when it does not.
+
+\subsection{Caveats and Alternative Interpretations}
+
+Three caveats temper the conclusions. First, the ``Magnificent Seven'' is a hindsight construct: defining the group as the firms that \emph{did} win guarantees that excluding them depresses returns (a survivorship/selection effect). Second, the 2019--2024 window is unusually favourable to these firms; a different window would yield a different magnitude. Third, high valuations may be fully warranted by fundamentals, in which case there is no ``bubble'' to deflate and no inefficiency to exploit.
+
+\section{Conclusion}
+
+Using historically reconstructed weights, a real equal-weight benchmark, and the realized risk-free rate, we find that the S\&P500's 2019--2024 performance was substantially a Magnificent-Seven phenomenon: these seven firms grew from $16\%$ to $58\%$ of the largest constituents' capitalization and account for roughly $35\%$ of cumulative index returns, with the cap-weighted index outpacing its equal-weight twin by $46$ percentage points. Concentration is best understood not as a transient anomaly but as a structural feature of modern capitalization-weighted indexing --- one that amplifies both returns and risk, and that complicates the simple equation of index ownership with diversification. Whether it represents efficient pricing of exceptional fundamentals or a narrative-driven excess remains, in keeping with the joint-hypothesis problem, formally undecidable from returns alone.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
