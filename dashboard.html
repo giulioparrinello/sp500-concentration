@@ -119,6 +119,7 @@
 
   .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   @media (max-width:560px){ body{padding:0 16px 48px;} table.metrics th,table.metrics td{padding:9px 10px;} }
+  .banner a,details a{color:var(--accent);}
   .papers-note{font-family:var(--mono); font-size:11px; color:var(--faint); margin:8px 0 0;}
   .banner.revision{border-left-color:var(--ink); margin:24px 0 0;}
   .banner.revision .tag{color:var(--ink);}
@@ -150,7 +151,7 @@
 
 <div class="banner revision rise" style="animation-delay:.03s">
   <div class="tag">Versione 2 · 14/10/2026</div>
-  <div>Rileggendo il lavoro ho trovato un errore nella versione 1 (giugno 2026): il prezzo di Yahoo Finance è corretto per gli split azionari, il numero di azioni no, quindi le capitalizzazioni prima di ogni split risultavano molto più basse (Amazon a fine 2018: 38 miliardi di dollari invece di 734). La quota iniziale dei Mag7 era 16% invece di 30%: la concentrazione è quasi raddoppiata, non triplicata. La versione 2 usa le azioni dichiarate alla SEC e ricompone ogni anno il gruppo dei 50 titoli più grandi. I numeri basati sugli ETF cambiano di poco. Dettagli nella sezione 2 del paper e nella scheda Revisione.</div>
+  <div>Rileggendo il lavoro ho trovato un errore nella versione 1 (giugno 2026): il prezzo di Yahoo Finance è corretto per gli split azionari, il numero di azioni no, quindi le capitalizzazioni prima di ogni split risultavano molto più basse (Amazon a fine 2018: 38 miliardi di dollari invece di 734). La quota iniziale dei Mag7 era 16% invece di 30%: la concentrazione è quasi raddoppiata, non triplicata. La versione 2 usa le azioni dichiarate alla SEC e ricompone ogni anno il gruppo dei 50 titoli più grandi. I numeri basati sugli ETF cambiano di poco. Dettagli nella sezione 2 del paper, nella scheda Revisione e nel <a href="https://github.com/giulioparrinello/sp500-concentration" target="_blank" rel="noopener">repository su GitHub</a>.</div>
 </div>
 
 <section class="research rise" style="animation-delay:.05s">
@@ -187,6 +188,7 @@
 <li><b>Attribuzione esatta</b>: i contributi dei singoli titoli sommano al rendimento del top 50. Le quote si riferiscono al top 50, non all'intero S&amp;P500.</li>
 <li><b>Equal-weight reale</b>: ETF RSP. <b>Risk-free reale</b>: T-bill a 13 settimane (^IRX), variabile.</li>
 <li>I Mag7 sono scelti con il senno di poi: per questo il confronto principale è SPY contro RSP.</li>
+<li><b>Codice e dati</b>: <a href="https://github.com/giulioparrinello/sp500-concentration" target="_blank" rel="noopener">github.com/giulioparrinello/sp500-concentration</a>, con le istruzioni per replicare i risultati.</li>
 </ul></details>
 
 <footer><a href="https://giulioparrinello.it">giulioparrinello.it</a></footer>

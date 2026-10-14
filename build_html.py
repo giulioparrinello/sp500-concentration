@@ -17,6 +17,7 @@ import core
 HERE = Path(__file__).parent
 OUT = HERE / "dashboard.html"
 PLOT_CFG = {"displayModeBar": False, "responsive": True}
+REPO = "https://github.com/giulioparrinello/sp500-concentration"
 PLOTLY_JS = f"https://cdn.plot.ly/plotly-{plotly.offline.get_plotlyjs_version()}.min.js"
 
 
@@ -113,8 +114,8 @@ revision_html = (f"Rileggendo il lavoro ho trovato un errore nella versione 1 (g
                  f"invece di 734). La quota iniziale dei Mag7 era {it(v1.iloc[0], 0)}% invece di "
                  f"{it(s['conc_start_pct'], 0)}%: la concentrazione è quasi raddoppiata, non triplicata. "
                  f"La versione 2 usa le azioni dichiarate alla SEC e ricompone ogni anno il gruppo dei 50 titoli "
-                 f"più grandi. I numeri basati sugli ETF cambiano di poco. Dettagli nella sezione 2 del paper "
-                 f"e nella scheda Revisione.")
+                 f"più grandi. I numeri basati sugli ETF cambiano di poco. Dettagli nella sezione 2 del paper, "
+                 f"nella scheda Revisione e nel <a href=\"{REPO}\" target=\"_blank\" rel=\"noopener\">repository su GitHub</a>.")
 
 methodology_html = f"""<ul>
 <li><b>Capitalizzazioni storiche</b>: prezzo × azioni in circolazione dichiarate alla SEC (dati XBRL), sulla stessa base split. Fusioni dalla data di chiusura, spin-off dal giorno dello stacco. Visa e Berkshire: azioni equivalenti da Yahoo Finance.</li>
@@ -122,6 +123,7 @@ methodology_html = f"""<ul>
 <li><b>Attribuzione esatta</b>: i contributi dei singoli titoli sommano al rendimento del top 50. Le quote si riferiscono al top 50, non all'intero S&amp;P500.</li>
 <li><b>Equal-weight reale</b>: ETF RSP. <b>Risk-free reale</b>: T-bill a 13 settimane (^IRX), variabile.</li>
 <li>I Mag7 sono scelti con il senno di poi: per questo il confronto principale è SPY contro RSP.</li>
+<li><b>Codice e dati</b>: <a href="{REPO}" target="_blank" rel="noopener">github.com/giulioparrinello/sp500-concentration</a>, con le istruzioni per replicare i risultati.</li>
 </ul>"""
 
 ids_js = "[" + ",".join(f'"{d}"' for _, d, _, _ in TABS) + "]"
