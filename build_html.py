@@ -158,7 +158,7 @@ TEMPLATE = r"""<!DOCTYPE html>
     <a class="paper-btn" href="https://giulioparrinello.it/paper1/it" target="_blank" rel="noopener"><span class="ic">↗</span>Leggi il paper completo (IT)</a>
     <a class="paper-btn alt" href="https://giulioparrinello.it/paper1/en" target="_blank" rel="noopener"><span class="ic">↗</span>EN</a>
   </div>
-  <p class="papers-note">La versione inglese è stata tradotta dall'italiano con Claude (versione 1: Claude 3.5 Sonnet; versione 2: Claude Opus 5.5).</p>
+  <p class="papers-note">La versione inglese è stata tradotta dall'italiano con Claude 3.5 Sonnet.</p>
 </header>
 
 <div class="banner revision rise" style="animation-delay:.03s">
