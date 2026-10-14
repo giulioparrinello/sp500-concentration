@@ -1,79 +1,70 @@
 # S&P500 Concentration Analysis
 
-Analisi interattiva di quanto la performance dell'S&P500 (2019–2024) dipenda dai
-"Magnificent Seven" (Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta, Tesla), e
-di cosa questo implichi per l'Efficient Market Hypothesis.
+Quanto della performance dell'S&P500 (2019–2024) dipende dai "Magnificent Seven"
+(Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta, Tesla), e che cosa implica per
+l'Ipotesi dei Mercati Efficienti.
 
-## Domanda di ricerca
+**Versione 2, 14 ottobre 2026.** Corregge un errore della versione 1 (giugno 2026):
+il prezzo di Yahoo Finance è aggiustato per gli split, il numero di azioni no, quindi
+le capitalizzazioni prima di ogni split erano sottostimate (Amazon a fine 2018:
+38 miliardi di dollari invece di 734). La versione 1 è il primo commit del repository;
+la sezione 2 del paper descrive la revisione.
 
-> "Quanto della performance dell'S&P500 è spiegabile da un pugno di titoli? E cosa
-> ci dice questo sulla market efficiency?"
+## Metodologia
 
-## Metodologia (dati reali, niente pesi statici)
-
-- **Market cap storici reali**: prezzo non aggiustato × azioni in circolazione nel
-  tempo (`yfinance get_shares_full`) → pesi cap-weighted che variano nel tempo,
-  senza look-ahead bias.
-- **Benchmark equal-weight reale**: ETF RSP (Invesco S&P500 Equal Weight). Il
-  divario SPY vs RSP è la misura standard dell'effetto concentrazione.
-- **Risk-free reale**: rendimento T-bill USA a 13 settimane (`^IRX`), variabile.
-- **Significatività statistica**: paired t-test sulla differenza di rendimento
-  giornaliero SPY − RSP.
-- Validazione: l'indice ricostruito correla **0.98** con SPY reale.
-
-## Fonti dati
-
-Tutti i dati sono pubblici e gratuiti, scaricati via `yfinance` (Yahoo Finance):
-SPY, RSP, ^IRX e i 50 maggiori costituenti dell'indice; azioni in circolazione
-storiche via `get_shares_full`.
-
-## Installazione
-
-```bash
-pip install -r requirements.txt
-```
+- **Capitalizzazioni storiche**: prezzo di chiusura × azioni in circolazione dichiarate
+  alla SEC (dati XBRL, `data.sec.gov`), sulla stessa base split. Fusioni dalla data di
+  chiusura, spin-off dal giorno dello stacco. Visa e Berkshire Hathaway: azioni
+  equivalenti da Yahoo Finance.
+- **Universo point-in-time**: ogni anno i 50 titoli più grandi a fine anno precedente,
+  tra i membri dell'S&P500 (111 candidati).
+- **Benchmark equal-weight**: ETF RSP. Il divario SPY/RSP misura l'effetto concentrazione.
+- **Risk-free**: T-bill USA a 13 settimane (`^IRX`), variabile.
+- **Attribuzione esatta**: i contributi dei titoli sommano al rendimento dell'indice.
+- **Significatività**: t-test sulla differenza giornaliera SPY meno RSP, anche con
+  errori standard di Newey-West.
+- **Controlli automatici** (`core.validate`): salti anomali nelle capitalizzazioni,
+  copertura dei dati, correlazione con SPY. `build_paper.py` e `build_html.py` si
+  fermano se un controllo fallisce.
 
 ## Uso
 
-Dashboard interattiva:
 ```bash
-streamlit run app.py
+pip install -r requirements.txt
+python build_paper.py      # figure IT/EN, paper/results.json, data/*.csv
+python build_html.py       # report web (dashboard.html)
+streamlit run app.py       # dashboard interattiva
 ```
 
-Generazione figure + numeri per il paper (anche via `run_analysis.bat`):
+Il primo avvio scarica i dati (prezzi da Yahoo Finance, filing SEC in `data/sec/`)
+e salva uno snapshot in `data/snapshot.pkl`; gli avvii successivi lo riusano.
+Entrambi sono esclusi da git: `data/azioni_usate.csv` contiene le azioni effettivamente
+usate, per titolo e data, con la fonte.
+
+Compilazione dei paper (con `tectonic`, oppure pdflatex/Overleaf):
+
 ```bash
-python build_paper.py
+tectonic paper/main_it.tex   # originale italiano
+tectonic paper/main.tex      # traduzione inglese
 ```
 
 ## Struttura
 
 ```
 sp500-concentration/
-├── core.py            # Unica fonte di calcolo (dati + analisi)
-├── app.py             # Dashboard Streamlit (UI su core.py)
-├── build_paper.py     # Esporta figure PNG + paper/results.json
-├── paper/
-│   ├── main.tex       # Paper LaTeX
-│   ├── references.bib # Bibliografia
-│   ├── results.json   # Numeri generati da build_paper.py
-│   └── figures/       # PNG esportati
-├── README.md
-└── requirements.txt
-```
-
-## Paper accademico
-
-Compilazione (con `tectonic`, oppure pdflatex/Overleaf):
-
-```bash
-tectonic paper/main.tex
+├── core.py            # Unica fonte di calcolo (dati, analisi, controlli)
+├── charts.py          # Grafici condivisi da paper e report
+├── build_paper.py     # Figure PNG IT/EN, results.json, dati esportati
+├── build_html.py      # Report web (stile in report.css)
+├── app.py             # Dashboard Streamlit
+├── data/              # Azioni usate, top 50 per anno, serie della v1
+└── paper/             # main_it.tex (originale), main.tex (EN), figure, results.json
 ```
 
 ## Limiti
 
-- Universo = 50 maggiori costituenti (replicano l'indice al ~98%).
-- SPY/RSP come proxy dell'indice e della sua versione equal-weight.
-- I "Magnificent Seven" sono scelti col senno di poi (selection bias): per questo
-  il confronto principale è SPY vs RSP, che non seleziona alcun titolo.
-- Il periodo include eventi eccezionali (crash Covid, rally post-Covid, shock tassi 2022).
-```
+- Quote e contributi si riferiscono al gruppo dei 50 titoli più grandi, non all'intero S&P500.
+- Capitalizzazione totale, non flottante; azioni aggiornate una volta per trimestre.
+- I "Magnificent Seven" sono scelti con il senno di poi: per questo il confronto
+  principale è SPY contro RSP.
+- Il periodo include eventi eccezionali (crollo del 2020, ripresa, rialzo dei tassi del 2022).
