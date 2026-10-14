@@ -1,149 +1,127 @@
 """
-build_html.py — "Builda" la dashboard app.py in un singolo file HTML statico,
-autosufficiente e dal design editoriale (dossier di equity research).
+build_html.py - Report web statico (The Concentration Report): stessi numeri
+e stessi grafici del paper (core.py + charts.py).
 
-- Solo tema chiaro (carta avorio / nero inchiostro, accento ruggine).
-- Il paper (PDF, IT ed EN) e' INCORPORATO nell'HTML: scaricabile anche spostando
-  il solo file .html.
-- Plotly.js incorporato inline -> apribile offline, grafici interattivi.
+- Solo tema chiaro (carta avorio, inchiostro nero, accento ruggine), stile in report.css.
+- Link ai PDF del paper sul sito; Plotly.js da CDN.
+- Output: dashboard.html, da copiare in portfolio/public/concentration-report.html.
 """
 from pathlib import Path
 
-import plotly.graph_objects as go
-import plotly.express as px
+import pandas as pd
+import plotly.offline
 
+import charts
 import core
 
 HERE = Path(__file__).parent
 OUT = HERE / "dashboard.html"
-PAPER = HERE / "paper"
 PLOT_CFG = {"displayModeBar": False, "responsive": True}
-GRID = "rgba(120,110,95,0.18)"
-INK = "#3A332B"
-COLORWAY = ["#B5482A", "#2F6E8F", "#C99A3B", "#1F7A5A", "#7D5BA6", "#467487", "#A8553A"]
-CORR_SCALE = [[0.0, "#F0E9DA"], [0.45, "#E0A96D"], [0.75, "#B5482A"], [1.0, "#6E2417"]]
+PLOTLY_JS = f"https://cdn.plot.ly/plotly-{plotly.offline.get_plotlyjs_version()}.min.js"
 
 
-def styled(fig):
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Hanken Grotesk, -apple-system, sans-serif", size=13, color=INK),
-        height=480, margin=dict(l=55, r=25, t=18, b=40),
-        legend=dict(orientation="h", y=-0.17, font=dict(size=12.5)),
-        colorway=COLORWAY,
-    )
-    fig.update_xaxes(gridcolor=GRID, zerolinecolor=GRID, linecolor=GRID, color=INK)
-    fig.update_yaxes(gridcolor=GRID, zerolinecolor=GRID, linecolor=GRID, color=INK)
-    return fig
+def it(x: float, d: int = 1) -> str:
+    """Numero in formato italiano (virgola decimale, punto per le migliaia)."""
+    s = f"{x:,.{d}f}"
+    return s.replace(",", "_").replace(".", ",").replace("_", ".")
 
 
-def frag(fig, div_id, first=False):
-    return styled(fig).to_html(full_html=False, div_id=div_id,
-                               include_plotlyjs=("inline" if first else False),
-                               config=PLOT_CFG)
+def frag(fig, div_id):
+    fig.update_layout(height=480)
+    return fig.to_html(full_html=False, div_id=div_id, include_plotlyjs=False, config=PLOT_CFG)
 
 
 print(">> Calcolo (core.py)...")
 data = core.load_raw_data()
 a = core.analyze(data, excluded=core.MAG7)
+issues = core.validate(data, a)
+if issues:
+    raise SystemExit("Controlli non superati:\n  " + "\n  ".join(issues))
 td = a.trading_days
-
-# ── Figure ────────────────────────────────────────────────────────────────────
-f_perf = go.Figure()
-f_perf.add_scatter(x=td, y=a.spy_cum, name="S&P500 (SPY, cap-weight)", line=dict(width=2.6))
-f_perf.add_scatter(x=td, y=a.rsp_cum, name="Equal-Weight (RSP)", line=dict(width=2.6))
-f_perf.add_scatter(x=td, y=a.ex_cum, name="Senza Mag7", line=dict(width=2.4, dash="dash"))
-f_perf.update_yaxes(title="Indice (base 100)")
-
-f_attr = px.bar(a.attribution, x="Anno", y="Contributo", color="Titolo")
-f_attr.update_yaxes(title="Contributo (punti %)")
-
-f_conc = go.Figure()
-f_conc.add_scatter(x=td, y=a.conc_excluded, name="Magnificent 7", fill="tozeroy",
-                   line=dict(width=2.6, color="#B5482A"), fillcolor="rgba(181,72,42,0.12)")
-f_conc.add_scatter(x=td, y=a.conc_top5, name="Top 5", line=dict(width=2, dash="dot", color="#2F6E8F"))
-f_conc.update_yaxes(title="Quota market cap top-50 (%)")
-
-f_corr = px.imshow(a.corr, text_auto=".2f", color_continuous_scale=CORR_SCALE, zmin=0, zmax=1)
-
-f_sharpe = go.Figure()
-f_sharpe.add_scatter(x=td, y=core.rolling_sharpe(a.spy_ret, data["irx"]), name="S&P500 (SPY)", line=dict(width=2.6))
-f_sharpe.add_scatter(x=td, y=core.rolling_sharpe(a.rsp_ret, data["irx"]), name="Equal-Weight (RSP)", line=dict(width=2.6))
-f_sharpe.add_hline(y=0, line_dash="dot", line_color="rgba(120,110,95,0.5)")
-f_sharpe.update_yaxes(title="Sharpe ratio")
+v1 = pd.read_csv(HERE / "data" / "v1_concentrazione.csv", index_col=0, parse_dates=True)["mag7_pct_v1"]
 
 TABS = [
-    ("Performance", "chart-perf", "Cap-weight (SPY) vs equal-weight (RSP) vs indice senza Mag7 — base 100.", f_perf),
-    ("Attribuzione", "chart-attr", "Contributo annuo al rendimento dell'indice per titolo Mag7 (pesi storici).", f_attr),
-    ("Concentrazione", "chart-conc", "Quota di capitalizzazione dei Mag7 e dei top-5 nell'universo dei 50 maggiori titoli.", f_conc),
-    ("Correlazione", "chart-corr", "Correlazione dei rendimenti giornalieri tra Mag7 e indice.", f_corr),
-    ("Sharpe", "chart-sharpe", "Sharpe ratio rolling a 12 mesi — risk-free reale (^IRX).", f_sharpe),
+    ("Performance", "chart-perf", "SPY, RSP e top 50 senza Mag7, base 100.",
+     charts.performance(a, web=True)),
+    ("Attribuzione", "chart-attr",
+     "Contributo annuo di ogni titolo Mag7 al rendimento del top 50 (punti %). Il trattino nero è il totale.",
+     charts.attribution(a, web=True)),
+    ("Concentrazione", "chart-conc",
+     "Quota di capitalizzazione dei Mag7 e dei primi 5 nel top 50, ricomposto ogni anno.",
+     charts.concentration(a, web=True)),
+    ("Correlazione", "chart-corr", "Correlazione dei rendimenti giornalieri tra Mag7 e S&amp;P500.",
+     charts.heatmap(a, web=True)),
+    ("Sharpe", "chart-sharpe", "Sharpe ratio mobile a 12 mesi, con risk-free reale (^IRX).",
+     charts.sharpe(a, data["irx"], web=True)),
+    ("Revisione", "chart-rev", "Quota dei Mag7 nel top 50: versione 1 (errata) e versione 2 (corretta).",
+     charts.revision(a, v1, web=True)),
 ]
-
 tabbtn_html = "".join(
     f'<button class="tab{" active" if i == 0 else ""}" onclick="showTab({i})">'
     f'<span class="tab-n">{i + 1:02d}</span>{name}</button>'
     for i, (name, _, _, _) in enumerate(TABS))
-
-panels_html = ""
-for i, (name, div_id, desc, fig) in enumerate(TABS):
-    panels_html += (f'<div class="panel{" active" if i == 0 else ""}" id="panel-{i}">'
-                    f'<p class="desc">{desc}</p>{frag(fig, div_id, first=(i == 0))}</div>')
+panels_html = "".join(
+    f'<div class="panel{" active" if i == 0 else ""}" id="panel-{i}">'
+    f'<p class="desc">{desc}</p>{frag(fig, div_id)}</div>'
+    for i, (name, div_id, desc, fig) in enumerate(TABS))
 
 # ── KPI ───────────────────────────────────────────────────────────────────────
-m = a.metrics
+m, s = a.metrics, a.summary
 kpis = [
-    ("S&P500 — SPY", f"{m['SPY']['cum']:.0f}", "%", "rendimento 2019–2024", ""),
-    ("Equal-Weight — RSP", f"{m['RSP']['cum']:.0f}", "%", f"{a.summary['spy_vs_rsp_gap_pp']:+.0f} pp vs SPY", "down"),
-    ("Concentrazione Mag7", f"{a.summary['conc_end_pct']:.0f}", "%", f"da {a.summary['conc_start_pct']:.0f}% nel 2019", "up"),
-    ("Quota del rendimento", f"{a.summary['excluded_share_of_return_pct']:.0f}", "%", "spiegata dai Mag7", ""),
+    ("S&amp;P500 · SPY", it(m["SPY"]["cum"], 0), "%", "rendimento 2019–2024", ""),
+    ("Equal-weight · RSP", it(m["RSP"]["cum"], 0), "%", f"{it(s['spy_vs_rsp_gap_pp'], 0)} pp sotto SPY", "down"),
+    ("Concentrazione Mag7", it(s["conc_end_pct"], 0), "%", f"da {it(s['conc_start_pct'], 0)}% a inizio 2019", "up"),
+    ("Quota del rendimento", it(s["excluded_share_of_return_pct"], 0), "%", "del top 50, dovuta ai Mag7", ""),
 ]
-kpi_html = ""
-for i, (l, v, u, s, c) in enumerate(kpis):
-    kpi_html += (f'<div class="kpi" style="animation-delay:{0.05 * i + 0.1:.2f}s">'
-                 f'<div class="kpi-label">{l}</div>'
-                 f'<div class="kpi-value">{v}<span class="unit">{u}</span></div>'
-                 f'<div class="kpi-sub {c}">{s}</div></div>')
+kpi_html = "".join(
+    f'<div class="kpi" style="animation-delay:{0.05 * i + 0.1:.2f}s"><div class="kpi-label">{l}</div>'
+    f'<div class="kpi-value">{v}<span class="unit">{u}</span></div><div class="kpi-sub {c}">{sub}</div></div>'
+    for i, (l, v, u, sub, c) in enumerate(kpis))
 
-# ── Dati in sintesi (facts) ───────────────────────────────────────────────────
-nvidia_2324 = a.attribution[(a.attribution["Titolo"] == "NVIDIA") &
-                            (a.attribution["Anno"].isin([2023, 2024]))]["Contributo"].sum()
+attr = a.attribution.pivot(index="Anno", columns="Titolo", values="Contributo")
 mean_corr = a.corr.loc[[core.NAMES[t] for t in a.mag7_in], "S&P500"].mean()
 facts = [
-    (f"+{m['Mag7']['cum']:.0f}%", "Rendimento dei soli Mag7"),
-    (f"+{nvidia_2324:.1f} pp", "Contributo NVIDIA 2023–24"),
-    (f"{mean_corr:.2f}", "Correlazione media Mag7–S&P500"),
-    (f"{a.summary['conc_peak_pct']:.0f}%", "Concentrazione Mag7 di picco"),
-    (f"{a.conc_top5.iloc[-1]:.0f}%", "Quota dei Top-5 a fine 2024"),
-    (f"{len(td):,}".replace(",", "."), "Giorni di borsa analizzati"),
+    (f"+{it(m['Mag7']['cum'], 0)}%", "Rendimento dei soli Mag7"),
+    (f"+{it(attr.loc[[2023, 2024], 'NVIDIA'].sum())} pp", "Contributo NVIDIA 2023–24"),
+    (it(mean_corr, 2), "Correlazione media Mag7–S&amp;P500"),
+    (f"{it(s['conc_peak_pct'], 0)}%", "Quota Mag7 massima"),
+    (f"{it(a.conc_top5.iloc[-1], 0)}%", "Quota dei primi 5 a fine 2024"),
+    (it(len(td), 0), "Giorni di borsa analizzati"),
 ]
-facts_html = "".join(
-    f'<div class="fact"><div class="fact-v">{v}</div><div class="fact-l">{l}</div></div>'
-    for v, l in facts)
+facts_html = "".join(f'<div class="fact"><div class="fact-v">{v}</div><div class="fact-l">{l}</div></div>'
+                     for v, l in facts)
 
 # ── Tabella metriche ──────────────────────────────────────────────────────────
-labels = {"SPY": "S&P500 (SPY)", "RSP": "Equal-Weight (RSP)", "ExMag7": "Senza Mag7", "Mag7": "Solo Mag7"}
-rowfmt = [("Rendimento cumulato", "cum", "%"), ("Rendimento annualizzato", "ann", "%"),
-          ("Volatilità annua", "vol", "%"), ("Sharpe ratio", "sharpe", ""), ("Max drawdown", "mdd", "%")]
+labels = {"SPY": "S&amp;P500 (SPY)", "RSP": "Equal-weight (RSP)", "ExMag7": "Top 50 senza Mag7", "Mag7": "Solo Mag7"}
+rowfmt = [("Rendimento cumulato", "cum", "%", 1), ("Rendimento annualizzato", "ann", "%", 1),
+          ("Volatilità annua", "vol", "%", 1), ("Sharpe ratio", "sharpe", "", 2), ("Max drawdown", "mdd", "%", 1)]
 head = "".join(f"<th>{labels[k]}</th>" for k in m)
-tbody = ""
-for lab, key, unit in rowfmt:
-    cells = "".join(f"<td>{m[k][key]:.2f}{unit}</td>" for k in m)
-    tbody += f"<tr><th>{lab}</th>{cells}</tr>"
-table_html = f"<table class='metrics'><thead><tr><th></th>{head}</tr></thead><tbody>{tbody}</tbody></table>"
+tbody = "".join(f"<tr><th>{lab}</th>" + "".join(f"<td>{it(m[k][key], d)}{u}</td>" for k in m) + "</tr>"
+                for lab, key, u, d in rowfmt)
+table_html = f"<div class='table-wrap'><table class='metrics'><thead><tr><th></th>{head}</tr></thead><tbody>{tbody}</tbody></table></div>"
 
 tt = a.ttest
-sig = "significativo" if tt["significant_5pct"] else "<b>non significativo</b>"
-ttest_html = (f"Test t (SPY vs RSP, {tt['n_obs']} giorni): differenza media annualizzata "
-              f"<b>{tt['mean_ann_excess_pp']:+.1f} pp</b>, t = {tt['t_stat']:.2f}, "
-              f"p = {tt['p_value']:.3f} → {sig} al 5%. Un divario cumulato ampio può nascere "
-              f"da un vantaggio giornaliero piccolo e rumoroso, composto su sei anni.")
+ttest_html = (f"Test t sulla differenza giornaliera tra SPY e RSP ({it(tt['n_obs'], 0)} giorni): media "
+              f"<b>+{it(tt['mean_ann_excess_pp'], 2)} pp</b> l'anno, t = {it(tt['t_stat'], 2)}, p = {it(tt['p_value'], 2)}. "
+              f"Con errori standard di Newey-West: t = {it(tt['t_stat_nw'], 2)}, p = {it(tt['p_value_nw'], 2)}. "
+              f"<b>Non significativo</b> al 5%: un vantaggio giornaliero piccolo e rumoroso, composto su sei anni, "
+              f"produce comunque un divario cumulato ampio.")
+
+revision_html = (f"Rileggendo il lavoro ho trovato un errore nella versione 1 (giugno 2026): il prezzo di Yahoo "
+                 f"Finance è corretto per gli split azionari, il numero di azioni no, quindi le capitalizzazioni "
+                 f"prima di ogni split risultavano molto più basse (Amazon a fine 2018: 38 miliardi di dollari "
+                 f"invece di 734). La quota iniziale dei Mag7 era {it(v1.iloc[0], 0)}% invece di "
+                 f"{it(s['conc_start_pct'], 0)}%: la concentrazione è quasi raddoppiata, non triplicata. "
+                 f"La versione 2 usa le azioni dichiarate alla SEC e ricompone ogni anno il gruppo dei 50 titoli "
+                 f"più grandi. I numeri basati sugli ETF cambiano di poco. Dettagli nella sezione 2 del paper "
+                 f"e nella scheda Revisione.")
 
 methodology_html = f"""<ul>
-<li><b>Market cap storici reali</b> — prezzo non aggiustato × azioni in circolazione nel tempo (yfinance <code>get_shares_full</code>): niente look-ahead bias.</li>
-<li><b>Equal-weight reale</b> — ETF RSP. <b>Risk-free reale</b> — T-bill 13 settimane (^IRX), variabile.</li>
-<li>Universo = 50 maggiori costituenti; replicano l'indice al ~98% (corr <b>{a.summary['corr_full_vs_spy']:.3f}</b> con SPY).</li>
-<li>I Mag7 sono scelti col senno di poi (selection bias): per questo il confronto principale è SPY vs RSP.</li>
+<li><b>Capitalizzazioni storiche</b>: prezzo × azioni in circolazione dichiarate alla SEC (dati XBRL), sulla stessa base split. Fusioni dalla data di chiusura, spin-off dal giorno dello stacco. Visa e Berkshire: azioni equivalenti da Yahoo Finance.</li>
+<li><b>Universo</b>: ogni anno i 50 titoli più grandi a fine anno precedente, solo tra i membri dell'S&amp;P500 (Tesla dal 21/12/2020). Correlazione con SPY {it(s['corr_full_vs_spy'], 3)}, tracking error {it(s['tracking_error_pp'])} pp.</li>
+<li><b>Attribuzione esatta</b>: i contributi dei singoli titoli sommano al rendimento del top 50. Le quote si riferiscono al top 50, non all'intero S&amp;P500.</li>
+<li><b>Equal-weight reale</b>: ETF RSP. <b>Risk-free reale</b>: T-bill a 13 settimane (^IRX), variabile.</li>
+<li>I Mag7 sono scelti con il senno di poi: per questo il confronto principale è SPY contro RSP.</li>
 </ul>"""
 
 ids_js = "[" + ",".join(f'"{d}"' for _, d, _, _ in TABS) + "]"
@@ -157,156 +135,47 @@ print(">> Assemblo HTML...")
 TEMPLATE = r"""<!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Concentration Report — S&P500 2019–2024</title>
+<title>The Concentration Report · S&P500 2019–2024</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#F4F0E7; --surface:#FBF8F1; --ink:#1C1916; --muted:#6E665A; --faint:#9A9080;
-    --line:#E1D8C7; --line2:#D2C7B2; --accent:#B5482A; --up:#2F7D58; --down:#B5482A;
-    --shadow:rgba(60,45,25,0.10);
-    --serif:"Fraunces",Georgia,serif; --sans:"Hanken Grotesk",-apple-system,Segoe UI,sans-serif;
-    --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{font-family:var(--sans); background:var(--bg); color:var(--ink);
-       max-width:1080px; margin:0 auto; padding:0 26px 64px; line-height:1.55;
-       position:relative; overflow-x:hidden;}
-  body::before{content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
-       background-image:url("%%NOISE%%"); opacity:0.04; mix-blend-mode:multiply;}
-  body>*{position:relative; z-index:1;}
-  ::selection{background:var(--accent); color:#fff;}
-
-  @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;}}
-  .rise{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;}
-
-  header{padding:30px 0 16px; border-bottom:2px solid var(--ink); margin-bottom:2px;}
-  .kicker{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
-       color:var(--accent); display:flex; gap:14px; align-items:center; margin-bottom:14px;}
-  .kicker::after{content:""; flex:1; height:1px; background:var(--line2);}
-  .masthead{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;}
-  h1{font-family:var(--serif); font-weight:600; font-size:clamp(30px,5vw,52px); line-height:1.02;
-       letter-spacing:-.015em; margin:0; max-width:14ch;}
-  h1 em{font-style:italic; color:var(--accent);}
-  .byline{font-family:var(--mono); font-size:11.5px; color:var(--muted); text-align:right; line-height:1.9;}
-  .sub{color:var(--muted); font-size:15px; max-width:62ch; margin:18px 0 0; border-top:1px solid var(--line);
-       padding-top:14px;}
-
-  .papers{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px;}
-  .paper-btn{font-family:var(--mono); font-size:12px; letter-spacing:.04em; text-decoration:none;
-       display:inline-flex; align-items:center; gap:8px; padding:9px 16px; border-radius:2px;
-       border:1px solid var(--ink); color:var(--bg); background:var(--ink); transition:.2s;}
-  .paper-btn:hover{background:var(--accent); border-color:var(--accent);}
-  .paper-btn.alt{background:transparent; color:var(--ink);}
-  .paper-btn.alt:hover{color:var(--accent); border-color:var(--accent); background:transparent;}
-  .paper-btn .ic{font-size:13px;}
-
-  .research{max-width:72ch; margin:30px 0 6px; font-size:16px; line-height:1.72; color:var(--ink);}
-  .research p{margin:0 0 14px;}
-  .research .lead::first-letter{font-family:var(--serif); font-weight:600; float:left; font-size:62px;
-       line-height:.78; padding:6px 12px 0 0; color:var(--accent);}
-  .research b{font-weight:600;}
-
-  .kpis{display:grid; grid-template-columns:repeat(4,1fr); margin:32px 0 8px;
-       border:1px solid var(--line); background:var(--surface); border-radius:3px; overflow:hidden;}
-  .kpi{padding:20px 22px; border-right:1px solid var(--line);}
-  .kpi:last-child{border-right:none;}
-  .kpi-label{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);}
-  .kpi-value{font-family:var(--serif); font-weight:600; font-size:46px; line-height:1.05; margin:8px 0 4px;
-       font-variant-numeric:tabular-nums;}
-  .kpi-value .unit{font-size:24px; color:var(--faint); margin-left:2px;}
-  .kpi-sub{font-family:var(--mono); font-size:11px; color:var(--muted);}
-  .kpi-sub.up{color:var(--up);} .kpi-sub.down{color:var(--down);}
-  .kpi-sub.up::before{content:"▲ ";} .kpi-sub.down::before{content:"▼ ";}
-
-  .facts{display:grid; grid-template-columns:repeat(6,1fr); gap:0; margin:18px 0 8px;
-       border:1px solid var(--line); border-radius:3px; background:var(--surface); overflow:hidden;}
-  .fact{padding:16px 14px; border-right:1px solid var(--line); text-align:center;}
-  .fact:last-child{border-right:none;}
-  .fact-v{font-family:var(--serif); font-weight:600; font-size:26px; color:var(--accent); font-variant-numeric:tabular-nums;}
-  .fact-l{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:4px; line-height:1.4;}
-
-  .banner{display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:start;
-       background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
-       border-radius:3px; padding:16px 20px; margin:24px 0 36px; font-size:14px;}
-  .banner .tag{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
-       color:var(--accent); writing-mode:vertical-rl; transform:rotate(180deg); align-self:stretch;}
-
-  .sec-head{display:flex; align-items:baseline; gap:14px; margin:8px 0 16px;}
-  .sec-head .no{font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:.1em;}
-  .sec-head h2{font-family:var(--serif); font-weight:600; font-size:24px; margin:0; letter-spacing:-.01em;}
-  .sec-head .rule{flex:1; height:1px; background:var(--line); align-self:center;}
-
-  .tabs{display:flex; gap:0; border-bottom:1px solid var(--line2); flex-wrap:wrap;}
-  .tab{font-family:var(--sans); background:none; border:none; border-bottom:2px solid transparent;
-       color:var(--muted); font-size:14.5px; font-weight:600; padding:11px 18px 12px; cursor:pointer;
-       margin-bottom:-1px; display:flex; align-items:center; gap:8px; transition:color .2s;}
-  .tab .tab-n{font-family:var(--mono); font-size:10px; color:var(--faint); font-weight:500;}
-  .tab:hover{color:var(--ink);}
-  .tab.active{color:var(--accent); border-bottom-color:var(--accent);}
-  .tab.active .tab-n{color:var(--accent);}
-  .panel{display:none; background:var(--surface); border:1px solid var(--line); border-top:none;
-       border-radius:0 0 3px 3px; padding:18px 20px 8px;}
-  .panel.active{display:block; animation:rise .5s ease both;}
-  .desc{font-family:var(--mono); font-size:12px; color:var(--muted); margin:2px 2px 10px;}
-
-  table.metrics{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:13px;
-       font-variant-numeric:tabular-nums; background:var(--surface); border:1px solid var(--line); border-radius:3px; overflow:hidden;}
-  table.metrics th,table.metrics td{text-align:right; padding:11px 16px; border-bottom:1px solid var(--line);}
-  table.metrics tr:last-child td,table.metrics tr:last-child th{border-bottom:none;}
-  table.metrics thead th{color:var(--accent); font-weight:600; font-size:11px; letter-spacing:.04em; text-transform:uppercase;}
-  table.metrics tbody th{text-align:left; color:var(--ink); font-family:var(--sans); font-weight:600;}
-  table.metrics tbody tr:hover{background:color-mix(in srgb,var(--accent) 6%,transparent);}
-
-  details{font-size:13.5px; color:var(--muted); margin-top:18px; background:var(--surface);
-       border:1px solid var(--line); border-radius:3px; padding:14px 20px;}
-  summary{cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
-       color:var(--ink); font-weight:600;}
-  details ul{margin:12px 0 2px; padding-left:18px;} details li{margin:5px 0;}
-  code{font-family:var(--mono); font-size:.9em; background:color-mix(in srgb,var(--accent) 10%,transparent);
-       padding:1px 5px; border-radius:3px;}
-
-  footer{margin-top:48px; padding-top:18px; border-top:2px solid var(--ink); text-align:center;}
-  footer a{font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase;
-       color:var(--muted); text-decoration:none; transition:color .2s;}
-  footer a:hover{color:var(--accent);}
-
-  @media (max-width:860px){ .facts{grid-template-columns:repeat(3,1fr);} .fact:nth-child(3){border-right:none;} }
-  @media (max-width:760px){
-    .kpis{grid-template-columns:repeat(2,1fr);}
-    .kpi:nth-child(2){border-right:none;}
-    .kpi:nth-child(-n+2){border-bottom:1px solid var(--line);}
-  }
-</style></head><body>
+%%CSS%%
+</style><script src="%%PLOTLY%%"></script>
+</head><body>
 
 <header class="rise">
-  <div class="kicker">Equity Research · Indici · 2019—2024</div>
+  <div class="kicker">Equity Research · Indici · 2019–2024 · Versione 2</div>
   <div class="masthead">
     <h1>The Concentration <em>Report</em></h1>
     <div class="byline">S&amp;P500 vs Magnificent 7<br>Giulio Parrinello<br>Univ. di Palermo</div>
   </div>
-  <p class="sub">Quanto della performance dell'indice dipende da un pugno di titoli? Analisi con
-  market cap storici reali, ETF equal-weight (RSP) e risk-free reale (^IRX) — gli stessi numeri del paper.</p>
+  <p class="sub">Quanto della performance dell'indice dipende da un pugno di titoli? Capitalizzazioni
+  storiche dai dati SEC, ETF equal-weight (RSP) e risk-free reale (^IRX): gli stessi numeri del paper.</p>
   <div class="papers">
     <a class="paper-btn" href="https://giulioparrinello.it/paper1/it" target="_blank" rel="noopener"><span class="ic">↗</span>Leggi il paper completo (IT)</a>
     <a class="paper-btn alt" href="https://giulioparrinello.it/paper1/en" target="_blank" rel="noopener"><span class="ic">↗</span>EN</a>
   </div>
+  <p class="papers-note">La versione inglese è stata tradotta dall'italiano con Claude (versione 1: Claude 3.5 Sonnet; versione 2: Claude Opus 5.5).</p>
 </header>
+
+<div class="banner revision rise" style="animation-delay:.03s">
+  <div class="tag">Versione 2 · 14/10/2026</div>
+  <div>%%REVISION%%</div>
+</div>
 
 <section class="research rise" style="animation-delay:.05s">
   <p class="lead">La domanda di partenza è semplice: <b>quanta parte della performance dell'S&amp;P500
-  negli ultimi sei anni dipende davvero da un pugno di titoli?</b> L'indice è considerato il termometro
+  dal 2019 al 2024 dipende da un pugno di titoli?</b> L'indice è considerato il termometro
   diversificato del mercato statunitense, ma è ponderato per capitalizzazione: le aziende più grandi
-  pesano di più, e dal 2019 sette mega-cap tecnologiche — i <em>Magnificent 7</em> — hanno acquisito un
+  pesano di più. Dal 2019 sette mega-cap tecnologiche, i <em>Magnificent 7</em>, hanno raggiunto un
   peso senza precedenti.</p>
-  <p>Per misurarlo senza distorsioni ricostruiamo i <b>pesi storici reali</b> (prezzo × azioni in
-  circolazione nel tempo), confrontiamo l'indice con la sua versione equiponderata (ETF RSP) e isoliamo
-  il contributo dei sette titoli. Il risultato: i Magnificent 7 spiegano circa <b>un terzo</b> del
-  rendimento cumulato e il loro peso è più che triplicato. La concentrazione non è un'anomalia
-  passeggera ma una <b>caratteristica strutturale</b> dell'indicizzazione moderna — che amplifica tanto
-  i rendimenti quanto i rischi, e mette in discussione l'idea stessa di diversificazione passiva.</p>
+  <p>Per misurarlo ricostruiamo le <b>capitalizzazioni storiche</b> (prezzo × azioni dichiarate alla SEC),
+  confrontiamo l'indice con la sua versione equiponderata (ETF RSP) e isoliamo il contributo dei sette titoli
+  nel gruppo dei 50 più grandi. Il risultato: i Magnificent 7 spiegano <b>%%SHARE%%%</b> del rendimento di
+  questo gruppo e la loro quota è quasi raddoppiata. La concentrazione non è un'anomalia passeggera ma una
+  <b>caratteristica strutturale</b> dell'indicizzazione moderna. Amplifica i rendimenti quanto i rischi, e
+  mette in dubbio l'idea stessa di diversificazione passiva.</p>
 </section>
 
 <section class="kpis rise" style="animation-delay:.1s">%%KPIS%%</section>
@@ -338,7 +207,10 @@ function showTab(i){
 </body></html>"""
 
 html = (TEMPLATE
-        .replace("%%NOISE%%", NOISE)
+        .replace("%%CSS%%", (HERE / "report.css").read_text(encoding="utf-8").replace("%%NOISE%%", NOISE))
+        .replace("%%PLOTLY%%", PLOTLY_JS)
+        .replace("%%REVISION%%", revision_html)
+        .replace("%%SHARE%%", it(s["excluded_share_of_return_pct"], 0))
         .replace("%%KPIS%%", kpi_html)
         .replace("%%FACTS%%", facts_html)
         .replace("%%BANNER%%", ttest_html)
@@ -348,5 +220,6 @@ html = (TEMPLATE
         .replace("%%METHOD%%", methodology_html)
         .replace("%%IDS%%", ids_js))
 
+assert "—" not in html, "trattino lungo nel report"
 OUT.write_text(html, encoding="utf-8")
-print(f">> Scritto {OUT.name} ({OUT.stat().st_size/1e6:.1f} MB, solo tema chiaro)")
+print(f">> Scritto {OUT.name} ({OUT.stat().st_size / 1e6:.1f} MB)")
