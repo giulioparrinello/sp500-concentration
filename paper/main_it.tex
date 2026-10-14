@@ -20,8 +20,8 @@
 \geometry{margin=2.5cm}
 \onehalfspacing
 \hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
+\graphicspath{{figures/it/}}
 
-% Etichetta italiana per l'abstract
 \renewcommand{\abstractname}{Sommario}
 
 % --- Metadata ---
@@ -32,63 +32,127 @@ l'analisi della concentrazione (2019--2024)}
 \author{
   Giulio Parrinello\\
   \small Universit\`a degli Studi di Palermo\\
-  \small  Corso di studi in Ingegneria Gestionale\\
+  \small Corso di studi in Ingegneria Gestionale\\
   \small \texttt{giulioparrinello@mail.com}
 }
 
-\date{\today}
+\date{Versione 2, 14 ottobre 2026\\
+\small (versione 1: giugno 2026; le differenze sono descritte nella Sezione~\ref{sec:revisione})}
 
 % --- Document ---
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Questo articolo indaga in che misura la performance degli ultimi sei anni dell'indice S\&P500 (2019--2024) sia attribuibile a un ristretto sottoinsieme di grandi aziende tecnologiche, comunemente note come  ``Magnifici Sette'' (Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta e Tesla). Utilizzando dati di prezzo giornaliero pubblicamente disponibili, il numero \emph{storico} di azioni in circolazione per ricostruire pesi di capitalizzazione di mercato variabili nel tempo, e l'ETF equiponderato dell'S\&P500 (RSP) come benchmark neutrale rispetto alla concentrazione, scomponiamo i rendimenti dell'indice e quantifichiamo l'effetto-concentrazione. Troviamo che l'indice ponderato per capitalizzazione (SPY, $+158\%$) ha sovraperformato la propria versione equiponderata (RSP, $+113\%$) di circa $46$ punti percentuali; che i Magnifici Sette sono cresciuti da circa il $16\%$ al $58\%$ della capitalizzazione di mercato dei cinquanta maggiori titoli; e che un indice controfattuale che escludesse queste sette aziende avrebbe reso $+108\%$ invece di $+167\%$, il che implica che il gruppo spiega circa il $35\%$ dei rendimenti cumulati dell'indice. Questi risultati sollevano interrogativi sulle assunzioni di diversificazione insite nell'investimento passivo e sul contenuto empirico della forma semi-forte dell'Ipotesi dei Mercati Efficienti in un'epoca di concentrazione del capitale.
+Questo lavoro misura quanta parte del rendimento dell'S\&P500 tra il 2019 e il 2024 si deve a sette grandi aziende tecnologiche, i ``Magnifici Sette'' (Apple, Microsoft, NVIDIA, Amazon, Alphabet, Meta e Tesla). Usiamo prezzi giornalieri, il numero di azioni in circolazione dichiarato alla SEC per ricostruire le capitalizzazioni storiche e l'ETF equiponderato RSP come termine di confronto neutro rispetto alla concentrazione. L'indice ponderato per capitalizzazione (SPY, $+157{,}5\%$) ha battuto la propria versione equiponderata (RSP, $+112{,}9\%$) di $44{,}6$ punti percentuali. Nell'universo dei 50 titoli pi\`u grandi, ricomposto ogni anno, la quota dei Magnifici Sette sale dal $29{,}5\%$ al $55{,}0\%$ della capitalizzazione, e i sette titoli spiegano il $66\%$ del rendimento cumulato di questo universo ($129{,}9$ punti su $196{,}9$). La differenza media giornaliera tra SPY e RSP non \`e statisticamente significativa ($p = 0{,}29$). Questa \`e la versione 2 del lavoro: corregge un errore nel calcolo delle capitalizzazioni presente nella versione 1.
 \end{abstract}
 
 \section{Introduzione}
 
-L'indice S\&P500 è ampiamente considerato un termometro diversificato del mercato azionario statunitense. Per costruzione, tuttavia, esso è \emph{ponderato per capitalizzazione}: ogni azienda entra nell'indice in proporzione al proprio valore di mercato, sicché le società più grandi esercitano un'influenza sproporzionata sul comportamento dell'indice. Negli ultimi anni questo meccanismo ha prodotto una concentrazione senza precedenti del peso dell'indice in un piccolo numero di mega-aziende a guida tecnologica --- Apple, Microsoft, NVIDIA, Alphabet, Amazon, Meta e Tesla --- collettivamente noti come i ``Magnifici Sette''.
+L'S\&P500 \`e considerato un indicatore diversificato del mercato azionario statunitense. \`E per\`o ponderato per capitalizzazione: ogni azienda pesa in proporzione al proprio valore di mercato, quindi le societ\`a pi\`u grandi influenzano l'indice pi\`u delle altre. Tra il 2019 e il 2024 una quota crescente del peso dell'indice si \`e concentrata in sette aziende tecnologiche: Apple, Microsoft, NVIDIA, Alphabet, Amazon, Meta e Tesla, chiamate ``Magnifici Sette''.
 
-Questo articolo pone una domanda semplice ma empiricamente importante: \emph{quanta parte della performance cumulata dell'S\&P500 nel periodo 2019--2024 è attribuibile a queste sette aziende, e che cosa ciò implica per l'efficienza del mercato?} Rispondiamo in tre modi complementari. In primo luogo, confrontiamo l'indice standard ponderato per capitalizzazione (rappresentato da SPY) con la versione equiponderata dello stesso indice (rappresentata dall'ETF RSP); il divario tra i due è la misura di mercato più pulita di quanto abbia contato la concentrazione. In secondo luogo, ricostruiamo pesi di capitalizzazione \emph{variabili nel tempo} a partire dai dati storici sulle azioni in circolazione e costruiamo un indice controfattuale che esclude i Magnifici Sette. In terzo luogo, scomponiamo i contributi al rendimento anno per anno e azienda per azienda. In tutto il lavoro mettiamo in relazione i risultati con l'Ipotesi dei Mercati Efficienti \citep{fama1970, fama1991}.
+La domanda del lavoro \`e: \emph{quanta parte della performance dell'S\&P500 nel 2019--2024 si deve a queste sette aziende, e che cosa implica per l'efficienza del mercato?} La affrontiamo in tre modi. Primo, confrontiamo l'indice ponderato per capitalizzazione (SPY) con la sua versione equiponderata (RSP): la differenza tra i due misura direttamente l'effetto della concentrazione. Secondo, ricostruiamo le capitalizzazioni storiche dei 50 titoli pi\`u grandi e costruiamo un indice controfattuale senza i Magnifici Sette. Terzo, scomponiamo il rendimento per anno e per azienda. I risultati sono discussi alla luce dell'Ipotesi dei Mercati Efficienti \citep{fama1970, fama1991}.
+
+\section{Nota sulla revisione (versione 2)}
+\label{sec:revisione}
+
+Rileggendo il lavoro a ottobre 2026 ho confrontato le capitalizzazioni ricostruite con valori di mercato noti e ho trovato un errore nel calcolo della versione 1 (giugno 2026). La versione 1 moltiplicava il prezzo di chiusura scaricato da Yahoo Finance per il numero di azioni in circolazione della stessa fonte. Il prezzo, per\`o, \`e gi\`a corretto per gli split azionari, mentre il numero di azioni non lo \`e. Per ogni titolo con uno split dopo il 2019 la capitalizzazione precedente allo split risultava quindi divisa per il fattore di split. A fine 2018 la versione 1 attribuiva ad Amazon 38 miliardi di dollari invece di 734, ad Alphabet 36 invece di 727, a NVIDIA 2 invece di 81 e ad Apple 187 invece di 749.
+
+L'errore riduceva il peso dei Magnifici Sette nella prima parte del periodo. Per questo la versione 1 riportava una concentrazione che passava dal $16\%$ al $58\%$, ``pi\`u che triplicata''. Con le capitalizzazioni corrette la quota passa dal $29{,}5\%$ al $55{,}0\%$: \`e quasi raddoppiata (Figura~\ref{fig:revision}). I risultati basati soltanto sugli ETF (SPY, RSP, Sharpe ratio, drawdown, test statistico) non dipendevano dalle capitalizzazioni e cambiano di poco, solo perch\'e ora il periodo comprende anche il 31 dicembre 2024.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{revision_chart.png}
+  \caption{Quota dei Magnifici Sette sulla capitalizzazione dei 50 titoli pi\`u grandi: versione 1 (errata) e versione 2 (corretta). Le due serie si avvicinano dopo gli split di Amazon (giugno 2022) e Alphabet (luglio 2022), quando l'errore non agisce pi\`u.}
+  \label{fig:revision}
+\end{figure}
+
+Oltre alla correzione dell'errore, la versione 2 introduce queste modifiche:
+\begin{itemize}
+  \item il numero di azioni proviene dai documenti depositati alla SEC \citep{secedgar} ed \`e riportato sulla stessa base split del prezzo;
+  \item l'universo dei 50 titoli \`e ricomposto ogni anno con i dati disponibili a fine anno precedente, invece di essere scelto sulla capitalizzazione media dell'intero periodo; Tesla entra solo dopo il suo ingresso nell'S\&P500 (21 dicembre 2020);
+  \item nessun dato viene riempito all'indietro con valori futuri;
+  \item il contributo di ciascun titolo \`e calcolato con un'attribuzione esatta, i cui contributi sommano al rendimento dell'indice; la versione 1 riportava invece come ``quota del rendimento'' un confronto controfattuale;
+  \item il test statistico \`e ripetuto con errori standard robusti all'autocorrelazione \citep{neweywest1987};
+  \item il periodo termina il 31 dicembre 2024 (la versione 1 si fermava al 30 dicembre per un'impostazione della data finale);
+  \item dalla bibliografia \`e stata tolta una fonte che non era possibile verificare.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{Principali risultati nelle due versioni.}
+  \begin{tabular}{lrr}
+    \toprule
+    & Versione 1 & Versione 2 \\
+    \midrule
+    Quota Mag7 nel top 50, inizio 2019      & $16{,}1\%$  & $29{,}5\%$ \\
+    Quota Mag7 nel top 50, fine 2024        & $58{,}1\%$  & $55{,}0\%$ \\
+    Quota del rendimento dovuta ai Mag7     & $35\%$\textsuperscript{a} & $66\%$\textsuperscript{b} \\
+    Top 50 senza Mag7, rendimento cumulato  & $+108{,}5\%$ & $+98{,}4\%$ \\
+    Solo Mag7, rendimento cumulato          & $+364{,}7\%$ & $+416{,}6\%$ \\
+    SPY, rendimento cumulato                & $+158{,}4\%$ & $+157{,}5\%$ \\
+    RSP, rendimento cumulato                & $+112{,}5\%$ & $+112{,}9\%$ \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  \footnotesize\textsuperscript{a} Differenza tra indice con e senza Mag7, divisa per il rendimento dell'indice. \textsuperscript{b} Attribuzione esatta (Sezione~\ref{sec:attribuzione}).
+  \label{tab:revisione}
+\end{table}
+
+Il codice, i dati usati (azioni per titolo e per data, con la fonte) e la cronologia delle modifiche sono conservati nel repository del progetto: la versione 1 \`e il primo commit, la versione 2 i successivi.
 
 \section{Rassegna della letteratura}
 
 \subsection{L'Ipotesi dei Mercati Efficienti}
 
-\citet{fama1970} introdusse la classica tassonomia in tre forme dell'efficienza di mercato. La forma semi-forte postula che i prezzi riflettano pienamente tutte le informazioni pubblicamente disponibili, implicando che nessun investitore possa ottenere sistematicamente rendimenti anomali tramite l'analisi fondamentale. \citet{fama1991} ha in seguito raffinato il quadro teorico, riconoscendo il problema della doppia ipotesi che affligge tutti i test empirici dell'efficienza: ogni test dell'efficienza è simultaneamente un test del modello di pricing degli attivi che si è assunto.
+\citet{fama1970} ha proposto la classificazione dell'efficienza di mercato in tre forme. La forma semi-forte sostiene che i prezzi riflettano tutta l'informazione pubblica, quindi nessun investitore pu\`o ottenere in modo sistematico rendimenti anomali con l'analisi fondamentale. \citet{fama1991} ha poi messo in evidenza il problema della doppia ipotesi: ogni test dell'efficienza \`e anche un test del modello di pricing che si assume.
 
 \subsection{Le critiche della finanza comportamentale}
 
-\citet{shiller1981} ha dimostrato che i prezzi azionari esibiscono una ``volatilità eccessiva'' rispetto alle successive variazioni dei dividendi, mettendo in discussione il fondamento di aspettative razionali dell'EMH. \citet{debondt1985} ha documentato una iper-reazione sistematica, con i titoli precedentemente perdenti che battono i precedenti vincitori su orizzonti di tre-cinque anni. Questi risultati suggeriscono che i mercati possano non incorporare le informazioni in modo efficiente a tutti gli orizzonti temporali, in particolare durante episodi di entusiasmo speculativo.
+\citet{shiller1981} ha mostrato che i prezzi azionari oscillano molto pi\`u di quanto giustificherebbero le successive variazioni dei dividendi. \citet{debondt1985} hanno documentato un'iper-reazione sistematica: i titoli che hanno perso di pi\`u nei tre-cinque anni precedenti battono in seguito quelli che hanno guadagnato di pi\`u. Entrambi i risultati indicano che i prezzi possono allontanarsi dai fondamentali, soprattutto nelle fasi di forte entusiasmo.
 
-\subsection{La concentrazione mega-cap negli indici moderni}
+\subsection{La concentrazione dei rendimenti azionari}
 
-Ricerche recenti e commenti di mercato \citep{sp500mag7_2024} hanno messo in evidenza la crescente concentrazione dell'S\&P500 attorno a una manciata di aziende tecnologiche. Il fenomeno è storicamente insolito: il peso combinato dei principali costituenti nel 2024 ha raggiunto livelli non più visti dagli anni '70, quando AT\&T e IBM dominavano l'indice. Le implicazioni per gli investitori passivi --- che per costruzione detengono l'indice così com'è --- sono significative, poiché la diversificazione che credono di possedere è sempre più nominale. Il caso classico a favore della diversificazione risale a \citet{markowitz1952}.
+\citet{bessembinder2018} mostra che, sul mercato statunitense dal 1926 al 2016, il guadagno netto delle azioni rispetto ai titoli di Stato a breve si deve a una piccola minoranza di societ\`a: circa il $4\%$ delle aziende quotate spiega l'intera ricchezza netta creata. La concentrazione dei rendimenti non \`e quindi un fenomeno nuovo. Il periodo 2019--2024 \`e interessante perch\'e la concentrazione riguarda pochi titoli gi\`a molto grandi, che per costruzione pesano molto negli indici seguiti dagli investitori passivi. L'argomento classico a favore della diversificazione risale a \citet{markowitz1952}.
 
 \section{Dati e metodologia}
 
 \subsection{Fonti dei dati}
 
-I prezzi di chiusura giornalieri provengono da Yahoo Finance tramite la libreria Python \texttt{yfinance}. Utilizziamo l'ETF SPY come proxy dell'S\&P500 ponderato per capitalizzazione e l'ETF Invesco RSP come proxy dell'S\&P500 equiponderato. Il periodo di analisi va dal 2 gennaio 2019 al 31 dicembre 2024 ($1{,}509$ giorni di contrattazione).
+I prezzi giornalieri provengono da Yahoo Finance tramite la libreria Python \texttt{yfinance}. SPY rappresenta l'S\&P500 ponderato per capitalizzazione, l'ETF Invesco RSP la versione equiponderata. Il periodo va dal 2 gennaio 2019 al 31 dicembre 2024: $1.510$ giorni di borsa e $1.509$ rendimenti giornalieri. Per i rendimenti usiamo prezzi corretti per split e dividendi; per le capitalizzazioni il prezzo di chiusura corretto solo per gli split.
 
-Un miglioramento metodologico chiave rispetto alle analisi statiche riguarda il nostro trattamento dei pesi. Anziché applicare retroattivamente i pesi di indice \emph{attuali} --- il che introdurrebbe un \emph{look-ahead bias} a favore delle aziende che sono grandi \emph{oggi} --- ricostruiamo le capitalizzazioni di mercato \emph{storiche} come prodotto tra il prezzo di chiusura non rettificato di ciascuna azienda e le sue azioni in circolazione a ciascuna data, queste ultime ottenute dalla serie storica delle azioni in circolazione di Yahoo Finance. Ne risultano pesi variabili nel tempo che riflettono la dimensione effettiva di ciascuna azienda in ciascun istante.
+Il numero di azioni in circolazione proviene dai dati XBRL depositati alla SEC \citep{secedgar}, prendendo per ogni data il primo valore pubblicato. Per 98 societ\`a usiamo il dato riportato in copertina nei bilanci trimestrali e annuali (\texttt{EntityCommonStockSharesOutstanding}); per 10 societ\`a per cui quel dato non \`e disponibile in forma aggregata su tutto il periodo (per esempio Meta e Mastercard, che hanno pi\`u classi di azioni) usiamo la media trimestrale delle azioni in circolazione; per Alphabet il totale delle tre classi dallo stato patrimoniale. Per Visa e Berkshire Hathaway la SEC non fornisce un totale aggregato e usiamo il numero di azioni equivalenti di Yahoo Finance (mediana trimestrale). Il tasso privo di rischio \`e il rendimento dei T-bill a 13 settimane (\texttt{\^{}IRX}).
 
-\subsection{Ricostruzione dell'indice}
+\subsection{Capitalizzazioni storiche}
 
-Definiamo l'universo di lavoro come i cinquanta maggiori costituenti dell'S\&P500 per capitalizzazione di mercato media nel periodo, i quali insieme rappresentano la grande maggioranza del valore dell'indice e ne riproducono fedelmente l'andamento complessivo (il rendimento ponderato per capitalizzazione ricostruito è correlato a $\rho = 0{,}98$ con SPY, a conferma della validità dell'approccio). Per costruire l'indice controfattuale ``senza Magnifici Sette'' rimuoviamo i sette ticker esclusi e rinormalizziamo quotidianamente i pesi rimanenti. Formalmente, per i costituenti rimanenti $i \in I \setminus E$, dove $E$ è l'insieme degli esclusi:
+La capitalizzazione dell'azienda $i$ nel giorno $t$ \`e
 \begin{equation}
-  w_{i,t}^{*} = \frac{m_{i,t}}{\sum_{j \in I \setminus E} m_{j,t}}, \qquad
   m_{i,t} = p_{i,t}\, s_{i,t},
 \end{equation}
-dove $p_{i,t}$ è il prezzo non rettificato e $s_{i,t}$ le azioni in circolazione. Il rendimento giornaliero controfattuale è
+dove $p_{i,t}$ \`e il prezzo di chiusura e $s_{i,t}$ il numero di azioni, entrambi espressi sulla stessa base split. Il numero di azioni resta costante fino al dato SEC successivo. Tre accorgimenti evitano errori sistematici: i dati gi\`a dichiarati dopo uno split ma riferiti a una data precedente vengono riportati alla base corretta (\`e il caso di Alphabet a giugno 2022 e di TJX a novembre 2018); per le fusioni che cambiano molto il numero di azioni (per esempio Celgene in Bristol-Myers Squibb, Allergan in AbbVie, Xilinx in AMD) il nuovo numero vale dalla data di chiusura dell'operazione; gli spin-off (per esempio WarnerMedia da AT\&T e GE HealthCare da General Electric) riducono la capitalizzazione dal giorno dello stacco. Un controllo automatico verifica che, al di fuori di questi eventi, la capitalizzazione non vari mai pi\`u del prezzo di oltre il $15\%$ in un giorno. Le capitalizzazioni ottenute coincidono con i valori di mercato noti: a fine 2024 Apple vale $3.785$ miliardi di dollari, NVIDIA $3.289$, Microsoft $3.134$.
+
+\subsection{Universo e indice ricostruito}
+
+Partiamo da 111 societ\`a candidate, tutte quelle che nel periodo potevano rientrare tra le 50 pi\`u grandi dell'S\&P500. All'ultimo giorno di borsa di ogni anno scegliamo le 50 con la capitalizzazione pi\`u alta, considerando solo quelle gi\`a presenti nell'indice, e le teniamo per tutto l'anno successivo. La soglia di ingresso, cio\`e la capitalizzazione della cinquantesima societ\`a, va da $91$ miliardi di dollari a fine 2018 a $176$ miliardi a fine 2021. In totale 66 societ\`a entrano nell'universo almeno per un anno. NVIDIA resta fuori nel 2019 (81 miliardi a fine 2018) e Tesla vi entra dal 2021.
+
+L'indice ricostruito \`e ponderato per capitalizzazione con i pesi del giorno precedente:
 \begin{equation}
-  r_t^{\text{ex}} = \sum_{i \in I \setminus E} w_{i,t-1}^{*} \cdot r_{i,t}.
+  r_t = \sum_{i \in U_t} w_{i,t-1}\, r_{i,t}, \qquad w_{i,t-1} = \frac{m_{i,t-1}}{\sum_{j \in U_t} m_{j,t-1}},
 \end{equation}
+dove $U_t$ \`e l'universo dell'anno di $t$. Il suo rendimento giornaliero ha correlazione $0{,}974$ con quello di SPY, con una differenza di rendimento annualizzata (tracking error) di $4{,}9$ punti percentuali: l'universo dei 50 titoli segue bene l'indice, ma non lo replica. L'indice controfattuale ``senza Magnifici Sette'' usa la stessa formula escludendo i sette titoli e ripartendo il loro peso sugli altri.
+
+\subsection{Attribuzione del rendimento}
+\label{sec:attribuzione}
+
+Il contributo dell'azienda $i$ al rendimento cumulato dell'indice \`e
+\begin{equation}
+  C_i = \sum_{t} w_{i,t-1}\, r_{i,t}\, \frac{I_{t-1}}{I_0},
+\end{equation}
+dove $I_t$ \`e il livello dell'indice. Con questa definizione la somma dei contributi coincide esattamente con il rendimento cumulato dell'indice. Il contributo annuo usa la stessa formula, con il livello dell'indice a inizio anno al posto di $I_0$.
 
 \subsection{Performance corretta per il rischio}
 
-Il confronto corretto per il rischio si basa sullo Sharpe ratio. Anziché fissare il tasso privo di rischio, utilizziamo il rendimento \emph{realizzato} dei Treasury bill statunitensi a 13 settimane (\texttt{\^{}IRX}), che è variato da quasi zero nel 2020--2021 a oltre il $5\%$ nel 2023--2024. Lo Sharpe ratio annualizzato è calcolato sia sull'intero periodo sia su una finestra mobile di 12 mesi (252 giorni):
+Lo Sharpe ratio annualizzato \`e calcolato sull'intero periodo e su una finestra mobile di 252 giorni, con il tasso privo di rischio realizzato, passato da valori vicini allo zero nel 2020--2021 a oltre il $5\%$ nel 2023--2024:
 \begin{equation}
   \mathrm{Sharpe} = \frac{\overline{r_t - r^{f}_t}}{\sigma(r_t - r^{f}_t)} \, \sqrt{252}.
 \end{equation}
@@ -96,11 +160,13 @@ Il confronto corretto per il rischio si basa sullo Sharpe ratio. Anziché fissar
 \subsection{Limiti}
 
 \begin{itemize}
-  \item L'universo di lavoro è costituito dai primi 50 costituenti; i membri più piccoli dell'S\&P500 sono esclusi, sebbene il loro peso aggregato sia ridotto.
-  \item SPY e RSP sono usati come proxy dell'indice e della sua versione equiponderata; sussistono un modesto errore di replica e l'attrito dovuto alle commissioni.
-  \item I dati sulle azioni in circolazione sono comunicati a intervalli irregolari e riportati in avanti (forward-fill) tra un aggiornamento e l'altro.
-  \item La composizione stessa dei ``Magnifici Sette'' è scelta col senno di poi; il gruppo è definito ex post come l'insieme delle aziende che sono arrivate a dominare l'indice.
-  \item Il periodo include eventi macroeconomici eccezionali (il crollo da Covid, il mercato rialzista post-Covid e lo shock dei tassi del 2022) che amplificano l'effetto-concentrazione misurato.
+  \item L'universo comprende solo i 50 titoli pi\`u grandi: le quote e i contributi si riferiscono a questo universo, non all'intero S\&P500, dove il peso dei Magnifici Sette \`e minore.
+  \item I candidati sono 111 societ\`a scelte tra le maggiori del periodo; una societ\`a esclusa dall'elenco che avesse superato la soglia di ingresso mancherebbe dall'universo.
+  \item Usiamo la capitalizzazione totale, mentre l'S\&P500 pesa le societ\`a sulla parte di azioni liberamente negoziabile (flottante).
+  \item Il numero di azioni \`e aggiornato una volta per trimestre; per Visa e Berkshire Hathaway la fonte \`e Yahoo Finance invece della SEC.
+  \item SPY e RSP sono fondi che replicano gli indici, con un piccolo errore di replica e commissioni diverse.
+  \item Il gruppo dei Magnifici Sette \`e definito a posteriori, come l'insieme delle aziende che hanno finito per dominare l'indice.
+  \item Il periodo comprende eventi eccezionali (il crollo del 2020, la ripresa successiva e il rialzo dei tassi del 2022) che amplificano l'effetto misurato.
 \end{itemize}
 
 \section{Risultati}
@@ -109,99 +175,103 @@ Il confronto corretto per il rischio si basa sullo Sharpe ratio. Anziché fissar
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/performance_chart.png}
-  \caption{Performance cumulata (base $=100$): l'S\&P500 ponderato per capitalizzazione (SPY), la sua versione equiponderata (RSP) e l'indice ricostruito dei primi 50 titoli escludendo i Magnifici Sette, 2019--2024.}
+  \includegraphics[width=\linewidth]{performance_chart.png}
+  \caption{Performance cumulata (base $=100$) di SPY, RSP e dell'indice ricostruito dei 50 titoli pi\`u grandi senza i Magnifici Sette, 2019--2024.}
   \label{fig:performance}
 \end{figure}
 
-La Figura~\ref{fig:performance} mostra il risultato centrale. L'indice ponderato per capitalizzazione ha reso $+158\%$ nel periodo, mentre la versione equiponderata ha reso soltanto $+113\%$ --- un divario di circa $46$ punti percentuali attribuibile quasi interamente al contributo sproporzionato delle aziende più grandi. L'indice controfattuale dei primi 50 titoli che esclude i Magnifici Sette resta ancora più indietro, a $+108\%$. Le tre curve sono pressoché indistinguibili fino al 2020, per poi divaricarsi progressivamente, con la divergenza che accelera nettamente nel biennio 2023--2024.
+SPY ha reso $+157{,}5\%$ nel periodo, RSP $+112{,}9\%$: una differenza di $44{,}6$ punti percentuali (Figura~\ref{fig:performance}). L'indice dei 50 titoli pi\`u grandi senza i Magnifici Sette ha reso $+98{,}4\%$. Le tre curve restano vicine fino alla primavera del 2020 e poi si separano. Il vantaggio di SPY non \`e costante: RSP ha fatto meglio nel 2021 ($+29{,}4\%$ contro $+28{,}7\%$) e nel 2022 ($-11{,}6\%$ contro $-18{,}2\%$), mentre nel 2023 e nel 2024 SPY ha reso circa il doppio di RSP ($+26{,}2\%$ contro $+13{,}7\%$ e $+24{,}9\%$ contro $+12{,}8\%$).
 
 \subsection{Attribuzione dei rendimenti}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/attribution_chart.png}
-  \caption{Contributo annuo al rendimento dell'indice per ciascun titolo dei Magnifici Sette (punti percentuali di rendimento dell'indice), utilizzando i pesi storici variabili nel tempo.}
+  \includegraphics[width=\linewidth]{attribution_chart.png}
+  \caption{Contributo annuo di ciascun titolo dei Magnifici Sette al rendimento dell'indice dei 50 titoli pi\`u grandi (punti percentuali). Il segmento nero indica il totale dei sette titoli. NVIDIA non fa parte dell'universo nel 2019, Tesla nel 2019 e nel 2020.}
   \label{fig:attribution}
 \end{figure}
 
-La scomposizione a livello di singola azienda (Figura~\ref{fig:attribution}) mostra che il contributo non è distribuito in modo uniforme. Nel solo biennio 2023--2024, NVIDIA ha aggiunto circa $12{,}5$ punti percentuali al rendimento dell'indice, Apple $10{,}4$, Meta $9{,}8$, Microsoft $8{,}4$, Amazon $8{,}3$, Alphabet $7{,}2$ e Tesla $5{,}4$. L'emergere di NVIDIA come singolo maggiore contributore nel 2023--2024, sulla scia del ciclo di investimenti nell'intelligenza artificiale, è la caratteristica più sorprendente del periodo.
+Sull'intero periodo l'indice dei 50 titoli ha reso $+196{,}9\%$ e i Magnifici Sette ne spiegano $129{,}9$ punti, cio\`e il $66\%$. Per azienda: Apple $32{,}4$ punti, NVIDIA $29{,}1$, Microsoft $22{,}8$, Alphabet $16{,}2$, Amazon $13{,}5$, Meta $10{,}9$, Tesla $4{,}9$. Il contributo varia molto da un anno all'altro (Figura~\ref{fig:attribution}): i sette titoli aggiungono $14{,}8$ punti su $32{,}6$ nel 2019 e $29{,}7$ su $36{,}3$ nel 2023, mentre nel 2022 tolgono $19{,}9$ punti su una perdita complessiva di $24{,}6$. Nel biennio 2023--2024 il contributo maggiore \`e di NVIDIA ($13{,}6$ punti), seguita da Apple ($9{,}4$), Microsoft ($7{,}3$), Amazon ($6{,}9$), Alphabet ($6{,}3$), Meta ($5{,}9$) e Tesla ($4{,}3$). Nel solo 2024 NVIDIA aggiunge $8{,}7$ punti, pi\`u di qualsiasi altro titolo in un singolo anno del periodo.
+
+Il confronto controfattuale porta alla stessa conclusione: senza i Magnifici Sette l'indice dei 50 titoli avrebbe reso $+98{,}4\%$ invece di $+196{,}9\%$.
 
 \begin{table}[H]
   \centering
-  \caption{Riepilogo delle metriche principali, 2019--2024. Gli Sharpe ratio utilizzano il tasso realizzato dei T-bill a 13 settimane.}
+  \caption{Metriche principali, 2019--2024. Gli Sharpe ratio usano il tasso realizzato dei T-bill a 13 settimane. ``Senza Mag7'' e ``Solo Mag7'' sono costruiti sull'universo dei 50 titoli pi\`u grandi.}
   \begin{tabular}{lrrrr}
     \toprule
-    & SPY (cap-wt) & RSP (equipond.) & Senza Mag7 & Solo Mag7 \\
+    & SPY & RSP & Senza Mag7 & Solo Mag7 \\
     \midrule
-    Rendimento cumulato       & $158{,}4\%$ & $112{,}5\%$ & $108{,}5\%$ & $364{,}7\%$ \\
-    Rendimento annualizzato   & $17{,}2\%$  & $13{,}4\%$  & $13{,}1\%$  & $29{,}2\%$ \\
-    Volatilità annualizzata   & $19{,}8\%$  & $20{,}9\%$  & $18{,}2\%$  & $28{,}6\%$ \\
-    Sharpe ratio              & $0{,}78$    & $0{,}59$    & $0{,}63$    & $0{,}96$ \\
-    Max drawdown              & $-33{,}7\%$ & $-39{,}0\%$ & $-32{,}1\%$ & $-43{,}3\%$ \\
+    Rendimento cumulato       & $157{,}5\%$ & $112{,}9\%$ & $98{,}4\%$  & $416{,}6\%$ \\
+    Rendimento annualizzato   & $17{,}1\%$  & $13{,}4\%$  & $12{,}1\%$  & $31{,}5\%$ \\
+    Volatilit\`a annualizzata & $19{,}8\%$  & $20{,}9\%$  & $18{,}2\%$  & $28{,}3\%$ \\
+    Sharpe ratio              & $0{,}77$    & $0{,}59$    & $0{,}59$    & $1{,}03$ \\
+    Massimo drawdown          & $-33{,}7\%$ & $-39{,}0\%$ & $-31{,}5\%$ & $-44{,}0\%$ \\
     \bottomrule
   \end{tabular}
   \label{tab:metrics}
 \end{table}
 
-La Tabella~\ref{tab:metrics} rivela un punto più sottile. I Magnifici Sette non si sono limitati ad alzare i rendimenti; su base autonoma hanno conseguito uno Sharpe ratio di $0{,}96$, ben superiore sia all'indice ponderato per capitalizzazione ($0{,}78$) sia a quello equiponderato ($0{,}59$), nonostante una volatilità assai più elevata ($28{,}6\%$) e un drawdown più profondo ($-43{,}3\%$). La superiorità dello Sharpe dell'indice ponderato per capitalizzazione rispetto alla versione equiponderata è dunque ereditata direttamente dalla sua concentrazione su questi nomi.
+Presi da soli, i Magnifici Sette hanno uno Sharpe ratio di $1{,}03$, pi\`u alto di SPY ($0{,}77$) e di RSP ($0{,}59$), con una volatilit\`a ($28{,}3\%$) e un drawdown massimo ($-44{,}0\%$) maggiori (Tabella~\ref{tab:metrics}). Il vantaggio di SPY su RSP in termini di Sharpe ratio deriva quindi dal peso che SPY assegna a questi titoli.
 
 \subsection{La concentrazione nel tempo}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/concentration_chart.png}
-  \caption{Concentrazione: quota combinata di capitalizzazione di mercato dei Magnifici Sette (e dei cinque maggiori titoli) all'interno dell'universo dei cinquanta maggiori costituenti, 2019--2024.}
+  \includegraphics[width=\linewidth]{concentration_chart.png}
+  \caption{Quota dei Magnifici Sette e dei cinque titoli pi\`u grandi sulla capitalizzazione dell'universo dei 50 titoli pi\`u grandi, 2019--2024.}
   \label{fig:concentration}
 \end{figure}
 
-La Figura~\ref{fig:concentration} quantifica direttamente il trend di concentrazione. La quota combinata dei Magnifici Sette sulla capitalizzazione dei primi 50 titoli è salita da circa il $16\%$ all'inizio del 2019 a circa il $58\%$ alla fine del 2024 --- più che triplicata. Alla chiusura del periodo i soli cinque maggiori titoli rappresentavano quasi il $49\%$ dell'universo dei primi 50. Questo è il fatto strutturale che sottende ogni altro risultato dell'articolo.
+La quota dei Magnifici Sette sulla capitalizzazione dei 50 titoli pi\`u grandi passa dal $29{,}5\%$ di inizio 2019 al $55{,}0\%$ di fine 2024, con un massimo del $55{,}8\%$ il 24 dicembre 2024 (Figura~\ref{fig:concentration}). La crescita si interrompe nel 2022: la quota scende fino al $37{,}7\%$ il 5 gennaio 2023 e poi risale. I cinque titoli pi\`u grandi passano dal $30{,}5\%$ al $46{,}4\%$ dell'universo. I piccoli salti a inizio anno corrispondono alla ricomposizione dell'universo (per esempio l'ingresso di NVIDIA nel 2020 e di Tesla nel 2021).
 
 \subsection{Struttura di correlazione}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/heatmap_chart.png}
-  \caption{Matrice di correlazione di Pearson dei rendimenti giornalieri --- Magnifici Sette e S\&P500 (SPY), 2019--2024.}
+  \includegraphics[width=0.85\linewidth]{heatmap_chart.png}
+  \caption{Correlazione di Pearson dei rendimenti giornalieri tra i Magnifici Sette e l'S\&P500 (SPY), 2019--2024.}
   \label{fig:heatmap}
 \end{figure}
 
-La struttura di correlazione (Figura~\ref{fig:heatmap}) è rilevante per la questione della diversificazione. I Magnifici Sette esibiscono una correlazione media dei rendimenti giornalieri con l'indice di circa $0{,}68$; le correlazioni a coppie tra di loro scendono fino a circa $0{,}32$ (Tesla è la più idiosincratica). Le elevate correlazioni individuali con il benchmark si rinforzano meccanicamente man mano che queste aziende arrivano a dominare l'indice con cui sono correlate: un investitore che detiene l'indice detiene sempre più una scommessa tecnologica concentrata e mutuamente correlata, anziché un portafoglio diversificato.
+La correlazione media tra i rendimenti giornalieri dei Magnifici Sette e quelli di SPY \`e $0{,}68$ (Figura~\ref{fig:heatmap}). Tra i sette titoli le correlazioni vanno da $0{,}32$ a $0{,}74$; Tesla \`e il titolo meno legato agli altri e all'indice ($0{,}49$ con SPY). Pi\`u questi titoli pesano nell'indice, pi\`u la loro correlazione con l'indice cresce per costruzione: chi possiede l'indice detiene una quota sempre maggiore di titoli tecnologici correlati tra loro.
 
 \subsection{Performance corretta per il rischio}
 
-Lo Sharpe ratio mobile a 12 mesi (Figura~\ref{fig:sharpe}) mostra che il vantaggio corretto per il rischio dell'indice ponderato per capitalizzazione rispetto alla versione equiponderata non è costante: i due indici si muovono insieme per gran parte del campione, con SPY che si stacca decisamente durante il rally guidato dall'IA del 2023--2024. Vi sono intervalli --- in particolare lo shock dei tassi del 2022 --- in cui l'indice equiponderato ha tenuto in modo paragonabile o migliore, a ricordare che la concentrazione è un'arma a doppio taglio.
-
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{figures/sharpe_chart.png}
-  \caption{Sharpe ratio mobile a dodici mesi: ponderato per capitalizzazione (SPY) rispetto a equiponderato (RSP), utilizzando il tasso privo di rischio realizzato.}
+  \includegraphics[width=\linewidth]{sharpe_chart.png}
+  \caption{Sharpe ratio mobile a 12 mesi di SPY e RSP, con il tasso privo di rischio realizzato.}
   \label{fig:sharpe}
 \end{figure}
 
-\subsection{Significatività statistica}
+Lo Sharpe ratio mobile (Figura~\ref{fig:sharpe}) \`e pi\`u alto per SPY nel $68\%$ dei giorni, ma non sempre: nel 2021 e nel 2022 RSP ha avuto in media uno Sharpe ratio leggermente pi\`u alto. Il distacco a favore di SPY \`e massimo nel 2024, con una differenza media di $0{,}74$.
 
-Il divario cumulato di $46$ punti percentuali tra l'indice ponderato per capitalizzazione e quello equiponderato è economicamente ampio, ma è statisticamente distinguibile dal rumore? Verifichiamo l'ipotesi nulla che la differenza media dei rendimenti giornalieri $d_t = r_t^{\text{SPY}} - r_t^{\text{RSP}}$ sia pari a zero, mediante un test $t$ per dati appaiati sulle $1{,}509$ osservazioni giornaliere. La differenza media corrisponde a circa $+3{,}0$ punti percentuali di sovra-rendimento annualizzato a favore dell'indice ponderato per capitalizzazione, ma con $t = 1{,}08$ e $p = 0{,}28$ \emph{non} possiamo rifiutare l'ipotesi nulla ai livelli convenzionali.
+\subsection{Significativit\`a statistica}
 
-Questo apparente paradosso è istruttivo. Un vantaggio giornaliero piccolo rispetto alla volatilità giornaliera --- e perciò statisticamente non significativo ad alta frequenza --- può comporsi in una divergenza cumulata molto ampia nell'arco di sei anni. La sovraperformance complessiva è reale ed economicamente rilevante, eppure non costituisce prova statistica di un premio al rendimento persistente e sfruttabile; è coerente con l'idea che la concentrazione amplifichi un segnale giornaliero essenzialmente rumoroso. (Si noti che i rendimenti giornalieri presentano una lieve autocorrelazione, sicché il test $t$ sovrastima leggermente la dimensione effettiva del campione; la conclusione di non significatività è, semmai, conservativa.)
+Verifichiamo l'ipotesi che la differenza media dei rendimenti giornalieri $d_t = r_t^{\text{SPY}} - r_t^{\text{RSP}}$ sia nulla, sulle $1.509$ osservazioni. La differenza media corrisponde a $+2{,}95$ punti percentuali l'anno a favore di SPY, ma il test $t$ non permette di rifiutare l'ipotesi nulla ($t = 1{,}05$, $p = 0{,}29$). Il risultato non cambia usando errori standard di Newey-West con 7 ritardi, che tengono conto dell'autocorrelazione dei rendimenti ($t = 1{,}06$, $p = 0{,}29$).
+
+Un vantaggio giornaliero piccolo rispetto alla volatilit\`a giornaliera non \`e distinguibile dal rumore, ma composto su sei anni produce una differenza cumulata di $44{,}6$ punti. La sovraperformance di SPY \`e quindi rilevante in termini economici, ma non \`e la prova di un premio di rendimento persistente.
 
 \section{Discussione}
 
-\subsection{Implicazioni per l'EMH}
+\subsection{Implicazioni per l'Ipotesi dei Mercati Efficienti}
 
-I risultati ammettono due letture. Secondo un'interpretazione rigorosa dei mercati efficienti, il dominio dei Magnifici Sette non è affatto un'anomalia: i loro prezzi riflettono semplicemente fondamentali eccezionali e correttamente anticipati (cloud computing, scala pubblicitaria e ciclo del capitale legato all'IA). Il fatto che un insieme noto e nominato di titoli abbia trainato gran parte del rendimento dell'indice non costituisce, di per sé, prova di inefficienza --- la forma semi-forte predice soltanto che non si possano ottenere rendimenti \emph{anomali} a partire da informazioni \emph{pubbliche}, e la concentrazione è stata di pubblico dominio per tutto il periodo. La lettura comportamentale, sulla scia di \citet{shiller1981} e \citet{debondt1985}, additerebbe invece la rapidità e l'ampiezza della rivalutazione del 2023--2024 come coerenti con un'iper-reazione e un momentum guidato dalla narrativa. I nostri dati non possono dirimere la questione; il problema della doppia ipotesi \citep{fama1991} implica che ogni verdetto dipende dal modello di pricing assunto.
+I risultati ammettono due letture. Secondo l'ipotesi di efficienza, il peso raggiunto dai Magnifici Sette riflette fondamentali eccezionali e correttamente prezzati (cloud computing, pubblicit\`a digitale, investimenti nell'intelligenza artificiale). Il fatto che pochi titoli noti abbiano prodotto gran parte del rendimento non \`e di per s\'e una prova di inefficienza: la forma semi-forte esclude solo rendimenti anomali ottenibili dall'informazione pubblica, e la concentrazione era nota a tutti durante l'intero periodo. La lettura comportamentale, sulla linea di \citet{shiller1981} e \citet{debondt1985}, vedrebbe invece nella velocit\`a e nell'ampiezza della rivalutazione del 2023--2024 i segni di un'iper-reazione. I nostri dati non permettono di scegliere tra le due: per il problema della doppia ipotesi \citep{fama1991} la risposta dipende dal modello di pricing assunto.
 
 \subsection{Il rischio di concentrazione per gli investitori passivi}
 
-Merita enfasi un meccanismo che si auto-rinforza. L'investimento passivo ponderato per capitalizzazione acquista meccanicamente una quota maggiore di un titolo man mano che esso sale: man mano che le mega-cap crescono, i fondi indicizzati vi allocano quote sempre più grandi, il che sostiene la domanda e ne gonfia ulteriormente il peso. La diversificazione, principale argomento di vendita dell'investimento indicizzato \citep{markowitz1952}, viene così erosa silenziosamente dall'interno. Il divario di $46$ punti percentuali tra SPY e RSP è il prezzo di tale erosione quando la concentrazione ripaga; il drawdown più profondo del paniere Mag7 ($-43\%$) ne è il costo quando non ripaga.
+Un fondo ponderato per capitalizzazione compra automaticamente una quota maggiore dei titoli che salgono. Quando le grandi aziende crescono, i fondi indicizzati vi investono di pi\`u e la domanda aggiuntiva ne sostiene ulteriormente il peso. La diversificazione, principale argomento a favore dell'investimento indicizzato \citep{markowitz1952}, si riduce senza che l'investitore cambi nulla. La differenza di $44{,}6$ punti tra SPY e RSP misura il guadagno della concentrazione nel periodo; il drawdown massimo dei Magnifici Sette ($-44{,}0\%$) ne mostra il rischio.
 
-\subsection{Cautele e interpretazioni alternative}
+\subsection{Cautele}
 
-Tre cautele temperano le conclusioni. In primo luogo, i ``Magnifici Sette'' sono un costrutto col senno di poi: definire il gruppo come l'insieme delle aziende che \emph{hanno} vinto garantisce che escluderle deprima i rendimenti (un effetto di selezione/sopravvivenza). In secondo luogo, la finestra 2019--2024 è insolitamente favorevole a queste aziende; una finestra diversa produrrebbe un'entità diversa. In terzo luogo, le valutazioni elevate potrebbero essere pienamente giustificate dai fondamentali, nel qual caso non vi è alcuna ``bolla'' da sgonfiare né alcuna inefficienza da sfruttare.
+Tre cautele limitano le conclusioni. Primo, il gruppo dei Magnifici Sette \`e definito a posteriori: escludere le aziende che hanno vinto riduce per costruzione il rendimento dell'indice controfattuale. Per questo il confronto principale resta quello tra SPY e RSP, che non dipende da questa scelta. Secondo, il periodo 2019--2024 \`e stato particolarmente favorevole a queste aziende; in un altro periodo l'effetto sarebbe diverso. Terzo, se le valutazioni sono giustificate dai fondamentali, non c'\`e alcuna inefficienza da sfruttare.
 
 \section{Conclusione}
 
-Utilizzando pesi ricostruiti storicamente, un autentico benchmark equiponderato e il tasso privo di rischio realizzato, troviamo che la performance dell'S\&P500 nel 2019--2024 è stata in misura sostanziale un fenomeno dei Magnifici Sette: queste sette aziende sono cresciute dal $16\%$ al $58\%$ della capitalizzazione dei maggiori costituenti e spiegano circa il $35\%$ dei rendimenti cumulati dell'indice, con l'indice ponderato per capitalizzazione che supera il proprio gemello equiponderato di $46$ punti percentuali. La concentrazione è meglio intesa non come un'anomalia transitoria, bensì come una caratteristica strutturale dell'indicizzazione moderna ponderata per capitalizzazione --- una caratteristica che amplifica tanto i rendimenti quanto i rischi, e che complica la semplice equazione tra possesso dell'indice e diversificazione. Se ciò rappresenti un pricing efficiente di fondamentali eccezionali oppure un eccesso guidato dalla narrativa rimane, in coerenza con il problema della doppia ipotesi, formalmente indecidibile a partire dai soli rendimenti.
+Con capitalizzazioni ricostruite dai dati SEC, un universo ricomposto ogni anno e un benchmark equiponderato reale, la performance dell'S\&P500 nel 2019--2024 risulta in larga parte legata ai Magnifici Sette. Nell'universo dei 50 titoli pi\`u grandi la loro quota passa dal $29{,}5\%$ al $55{,}0\%$ e il loro contributo spiega il $66\%$ del rendimento cumulato; l'indice ponderato per capitalizzazione supera la propria versione equiponderata di $44{,}6$ punti. La concentrazione appare come una caratteristica strutturale dell'indicizzazione ponderata per capitalizzazione, che amplifica sia i rendimenti sia i rischi. Se rifletta un pricing efficiente di fondamentali eccezionali o un eccesso di entusiasmo non \`e decidibile a partire dai soli rendimenti.
+
+Rispetto alla versione 1 la conclusione qualitativa resta la stessa, ma i numeri cambiano: la concentrazione \`e quasi raddoppiata, non triplicata, e il contributo dei Magnifici Sette \`e misurato in modo esatto.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
