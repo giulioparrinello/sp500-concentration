@@ -17,6 +17,7 @@ Versione 2 (14 ottobre 2026). Rispetto alla versione 1 (giugno 2026):
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.request
 import warnings
@@ -33,7 +34,9 @@ warnings.filterwarnings("ignore")
 HERE = Path(__file__).parent
 SEC_DIR = HERE / "data" / "sec"
 SNAPSHOT = HERE / "data" / "snapshot.pkl"
-SEC_UA = "sp500-concentration academic research script (University of Palermo)"
+# La SEC chiede un User-Agent che identifichi chi scarica: impostare SEC_USER_AGENT
+# (es. "Nome Cognome nome@dominio.it") per usare il proprio.
+SEC_UA = os.environ.get("SEC_USER_AGENT", "sp500-concentration academic research script (University of Palermo)")
 
 MAG7 = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA"]
 NAMES = {
@@ -232,8 +235,10 @@ def _close(tickers, start, end, auto_adjust):
 
 
 def load_raw_data(start: str = DEFAULT_START, end: str = DEFAULT_END,
-                  universe: list[str] | None = None, use_snapshot: bool = True) -> dict:
-    """Scarica (o rilegge dallo snapshot) prezzi, split, azioni e tassi."""
+                  universe: list[str] | None = None, use_snapshot: bool = True,
+                  save_snapshot: bool = True) -> dict:
+    """Scarica (o rilegge dallo snapshot) prezzi, split, azioni e tassi.
+    save_snapshot=False lascia intatto lo snapshot esistente (usato da verify.py)."""
     default = universe is None and (start, end) == (DEFAULT_START, DEFAULT_END)
     if use_snapshot and default and SNAPSHOT.exists():
         return pd.read_pickle(SNAPSHOT)
@@ -272,7 +277,7 @@ def load_raw_data(start: str = DEFAULT_START, end: str = DEFAULT_END,
             "shares_obs": shares, "shares_source": source, "splits": splits, "pseudo_splits": pseudo,
             "trading_days": trading_days, "days_all": days_all,
             "downloaded": pd.Timestamp.now().strftime("%Y-%m-%d")}
-    if default:
+    if default and save_snapshot:
         SNAPSHOT.parent.mkdir(parents=True, exist_ok=True)
         pd.to_pickle(data, SNAPSHOT)
     return data
